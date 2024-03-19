@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">621820688017-1un0d0h09q0ojb0aojv7m5pe3p7181ba.apps.googleusercontent.com</string>
+    <string name="firebase_database_url" translatable="false">https://padhaihub-default-rtdb.asia-southeast1.firebasedatabase.app</string> <!-- Replace with your Firebase Database URL if different -->
+    <string name="gcm_defaultSenderId" translatable="false">621820688017</string> <!-- This is the project_number -->
+    <string name="google_api_key" translatable="false">AIzaSyCIhM9pO9nqINqRjPXA2D-1Lb4CyQOtUCE</string> <!-- This is the current_key under api_key -->
+    <string name="google_app_id" translatable="false">1:621820688017:android:36b0de297feca96aad3130</string> <!-- This is the mobilesdk_app_id -->
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCIhM9pO9nqINqRjPXA2D-1Lb4CyQOtUCE</string> <!-- Assuming it's the same as google_api_key -->
+    <string name="google_storage_bucket" translatable="false">padhaihub.appspot.com</string>
+    <string name="project_id" translatable="false">padhaihub</string>
+</resources>
