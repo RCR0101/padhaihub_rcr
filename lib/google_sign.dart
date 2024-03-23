@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<User?> signInWithGoogle() async {
   try {
@@ -15,6 +16,28 @@ Future<User?> signInWithGoogle() async {
         );
         final UserCredential userCredential =
             await FirebaseAuth.instance.signInWithCredential(credential);
+
+        // Check if this is a new user
+        final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+        if (isNewUser) {
+          try {
+            print("About to write to Firestore");
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(userCredential.user!.uid)
+                .set({
+              'id': googleUser.id,
+              'name': googleUser.displayName,
+              'email': googleUser.email,
+              'imageUrl': googleUser.photoUrl
+            });
+            print("Successfully written to Firestore");
+          } catch (e) {
+            print("Error adding user to Firestore: $e");
+            return null;
+          }
+        }
+
         return userCredential.user;
       } else {
         print('Unauthorized domain.');

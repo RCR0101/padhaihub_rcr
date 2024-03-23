@@ -2,13 +2,21 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'bloc/chat_bloc/chat_bloc.dart';
 import 'home.dart'; // Import the home page
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(
+    BlocProvider<ChatBloc>(
+      create: (context) =>
+          ChatBloc(DatabaseRepository()), // Create your ChatBloc
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

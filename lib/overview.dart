@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'chat_sys.dart';
+import 'package:padhaihub_v2/chat_list.dart';
+import 'package:padhaihub_v2/notes.dart';
+import 'package:padhaihub_v2/profile_page.dart';
 
 class MyLandingPage extends StatelessWidget {
   final String title;
@@ -69,8 +71,10 @@ class MyLandingPage extends StatelessWidget {
                     Icons.notes_rounded,
                     "Notes",
                     () {
-                      // Define what the "Notes" button should do
-                      // Navigator.push(context, MaterialPageRoute(builder: (context) => NotesPage()));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const MyNotesPage()));
                     },
                   ), // Adjust spacing as needed
                   actionButton(
@@ -79,8 +83,10 @@ class MyLandingPage extends StatelessWidget {
                     "Chats",
                     () {
                       // Define what the "Chats" button should do
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => ChatPage()));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UsersListPage()));
                     },
                   ), // Adjust spacing as needed
                   actionButton(
@@ -88,8 +94,10 @@ class MyLandingPage extends StatelessWidget {
                     Icons.person,
                     "Profile",
                     () {
-                      // Define what the "Profile" button should do
-                      // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const MyProfilePage()));
                     },
                   ),
                 ],
