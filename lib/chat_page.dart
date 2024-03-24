@@ -11,8 +11,10 @@ var uuid = const Uuid();
 
 class ChatPage extends StatefulWidget {
   final String userId;
+  final String chatId;
 
-  const ChatPage({Key? key, required this.userId}) : super(key: key);
+  const ChatPage({Key? key, required this.userId, required this.chatId})
+      : super(key: key);
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -27,7 +29,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _user = types.User(id: widget.userId);
     _chatBloc = context.read<ChatBloc>();
-    _chatBloc.add(LoadMessageEvent());
+    _chatBloc.add(LoadMessageEvent(widget.chatId));
   }
 
   @override
@@ -70,6 +72,6 @@ class _ChatPageState extends State<ChatPage> {
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    _chatBloc.add(SendMessageEvent(textMessage));
+    _chatBloc.add(SendMessageEvent(textMessage, widget.chatId));
   }
 }

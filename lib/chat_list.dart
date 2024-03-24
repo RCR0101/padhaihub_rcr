@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,12 +14,12 @@ class UsersListPage extends StatefulWidget {
 }
 
 class _UsersListPageState extends State<UsersListPage> {
-  Future<List<User>> getUsersFromFirestore() async {
+  Future<List<User_D>> getUsersFromFirestore() async {
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('users').get();
 
     return snapshot.docs
-        .map((doc) => User(
+        .map((doc) => User_D(
             id: doc.id,
             name: doc['name'],
             email: doc['email'],
@@ -61,7 +62,7 @@ class _UsersListPageState extends State<UsersListPage> {
           )
         ],
       ),
-      body: FutureBuilder<List<User>>(
+      body: FutureBuilder<List<User_D>>(
         future: getUsersFromFirestore(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -77,6 +78,8 @@ class _UsersListPageState extends State<UsersListPage> {
             itemCount: users.length,
             itemBuilder: (context, index) {
               final user = users[index];
+              String chatId = determineChatId(
+                  FirebaseAuth.instance.currentUser!.uid, user.id);
               return ListTile(
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(user.imageUrl),
@@ -89,7 +92,7 @@ class _UsersListPageState extends State<UsersListPage> {
                     MaterialPageRoute(
                       builder: (context) => BlocProvider<ChatBloc>(
                         create: (context) => ChatBloc(DatabaseRepository()),
-                        child: ChatPage(userId: user.id),
+                        child: ChatPage(userId: user.id, chatId: chatId),
                       ),
                     ),
                   );
@@ -108,4 +111,14 @@ String toCapitalCase(String input) {
     if (word.isEmpty) return '';
     return word[0].toUpperCase() + word.substring(1).toLowerCase();
   }).join(' ');
+}
+
+String determineChatId(String currentUserId, String otherUserId) {
+  // Ensure the order is always the same by sorting
+  List<String> ids = [currentUserId, otherUserId];
+  ids.sort();
+
+  // Concatenate the sorted user IDs to form the chat ID
+  String chatId = ids.join('_');
+  return chatId;
 }

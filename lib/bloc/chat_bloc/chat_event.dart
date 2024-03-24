@@ -4,8 +4,13 @@ abstract class ChatEvent {}
 
 class SendMessageEvent extends ChatEvent {
   types.TextMessage message;
+  final String chatId;
 
-  SendMessageEvent(this.message);
+  SendMessageEvent(this.message, this.chatId);
 }
 
-class LoadMessageEvent extends ChatEvent {}
+class LoadMessageEvent extends ChatEvent {
+  final String chatId;
+
+  LoadMessageEvent(this.chatId);
+}

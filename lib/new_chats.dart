@@ -10,12 +10,12 @@ class NewUsersListPage extends StatefulWidget {
 }
 
 class _NewUsersListPageState extends State<NewUsersListPage> {
-  Future<List<User>> getUsersFromFirestore() async {
+  Future<List<User_D>> getUsersFromFirestore() async {
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('users').get();
 
     return snapshot.docs
-        .map((doc) => User(
+        .map((doc) => User_D(
             id: doc.id,
             name: doc['name'],
             email: doc['email'],
@@ -45,7 +45,7 @@ class _NewUsersListPageState extends State<NewUsersListPage> {
         backgroundColor: Colors.teal.shade300,
         foregroundColor: Colors.black,
       ),
-      body: FutureBuilder<List<User>>(
+      body: FutureBuilder<List<User_D>>(
         future: getUsersFromFirestore(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

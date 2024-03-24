@@ -8,16 +8,18 @@ import 'chat_state.dart';
 class DatabaseRepository {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Future<void> storeMessage(types.TextMessage message) async {
-    await firestore.collection('messages').add({
+  Future<void> storeMessage(String chatId, types.TextMessage message) async {
+    await firestore.collection('chats').doc(chatId).collection('messages').add({
       'authorId': message.author.id,
       'text': message.text,
-      'timestamp': FieldValue.serverTimestamp(), // Use server timestamp
+      'timestamp': FieldValue.serverTimestamp(),
     });
   }
 
-  Stream<List<types.TextMessage>> getMessagesStream() {
+  Stream<List<types.TextMessage>> getMessagesStream(String chatId) {
     return firestore
+        .collection('chats')
+        .doc(chatId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
         .snapshots()
@@ -26,13 +28,11 @@ class DatabaseRepository {
               final author = types.User(id: data['authorId']);
               return types.TextMessage(
                 author: author,
-                // Use a null check or provide a fallback value for createdAt because
-                // the document might not have a timestamp yet if it's being processed.
-                createdAt:
-                    (data['timestamp'] as Timestamp?)?.millisecondsSinceEpoch ??
-                        DateTime.now().millisecondsSinceEpoch,
+                createdAt: data['timestamp'] != null
+                    ? (data['timestamp'] as Timestamp).millisecondsSinceEpoch
+                    : DateTime.now().millisecondsSinceEpoch,
                 id: doc.id,
-                text: data['text'] ?? '',
+                text: data['text'],
               );
             }).toList());
   }
@@ -66,11 +66,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
     });
   }
 
+  // Example of handling a send message event with a chat ID
   Future<void> _onSendMessageEvent(
       SendMessageEvent event, Emitter<ChatStateBloc> emit) async {
-    emit(ChatLoadingState());
     try {
-      await databaseRepository.storeMessage(event.message);
+      // Assuming chatId is determined and passed along with the event
+      await databaseRepository.storeMessage(event.chatId, event.message);
     } catch (e) {
       emit(ChatErrorState(e.toString()));
     }
@@ -80,7 +81,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
       LoadMessageEvent event, Emitter<ChatStateBloc> emit) async {
     emit(ChatLoadingState());
     try {
-      await for (final messages in databaseRepository.getMessagesStream()) {
+      await for (final messages
+          in databaseRepository.getMessagesStream(event.chatId)) {
         emit(ChatMessagesUpdatedState(messages));
       }
     } catch (e) {

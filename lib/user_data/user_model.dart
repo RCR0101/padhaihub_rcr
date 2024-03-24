@@ -1,17 +1,18 @@
-class User {
+class User_D {
   final String id;
   final String name;
   final String email;
   final String imageUrl;
-  User(
+
+  User_D(
       {required this.id,
       required this.name,
       required this.email,
       required this.imageUrl});
 
   // Constructor that creates a User instance from a Firestore document.
-  factory User.fromFirestore(Map<String, dynamic> doc) {
-    return User(
+  factory User_D.fromFirestore(Map<String, dynamic> doc) {
+    return User_D(
       id: doc['id'] as String,
       name: doc['name'] as String,
       email: doc['email'] as String,
