@@ -74,6 +74,7 @@ class MyHomePage extends StatelessWidget {
                 listener: (context, state) {
                   if (state is SignInSuccessState) {
                     Fluttertoast.showToast(
+                        gravity: ToastGravity.CENTER,
                         msg: "Login Successful"); // Optional: Notify user
                     Navigator.pushReplacement(
                         context,

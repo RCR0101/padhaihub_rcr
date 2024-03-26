@@ -1,11 +1,18 @@
+import 'dart:io';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:path/path.dart' as path;
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 import 'bloc/chat_bloc/chat_bloc.dart';
 import 'bloc/chat_bloc/chat_event.dart';
 import 'bloc/chat_bloc/chat_state.dart';
+import 'package:open_filex/open_filex.dart';
 
 var uuid = const Uuid();
 
@@ -32,11 +39,57 @@ class _ChatPageState extends State<ChatPage> {
     _chatBloc.add(LoadMessageEvent(widget.chatId));
   }
 
+  Future<void> _handleAttachPressed() async {
+    // Use FilePicker to let the user select a file
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String fileName = path.basename(file.path);
+
+      try {
+        // Upload to Firebase Storage
+        String destination = 'chat_attachments/$fileName';
+        await FirebaseStorage.instance.ref(destination).putFile(file);
+
+        // After the upload is complete, you might want to send a message
+        // in your chat that contains the download URL or a reference to the file
+        String fileUrl =
+            await FirebaseStorage.instance.ref(destination).getDownloadURL();
+        final message = types.FileMessage(
+          author: _user,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+          id: uuid.v4(),
+          name: result.files.single.name,
+          size: result.files.single.size,
+          uri: fileUrl,
+        );
+        _chatBloc.add(SendFileMessageEvent(message, widget.chatId, file));
+      } catch (e) {
+        Fluttertoast.showToast(msg: "$e", gravity: ToastGravity.CENTER);
+      }
+    } else {
+      Fluttertoast.showToast(msg: "No File Selected");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Chat'),
+          centerTitle: true,
+          title: Text('Chat',
+              style: GoogleFonts.abel(
+                  textStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenSize.width *
+                          0.08, // Adjusted size using screen width
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: screenSize.width * 0.03))),
           backgroundColor: Colors.teal.shade300,
         ),
         body: BlocConsumer<ChatBloc, ChatStateBloc>(
@@ -52,12 +105,20 @@ class _ChatPageState extends State<ChatPage> {
               return const Center(child: CircularProgressIndicator());
             } else if (state is ChatMessagesUpdatedState) {
               return Chat(
+                theme: DarkChatTheme(
+                  inputBackgroundColor: Colors.teal.shade300,
+                  backgroundColor: Colors.teal.shade300,
+                ),
                 messages: state.messages,
+                // ignore: prefer_const_constructors
+                scrollPhysics: BouncingScrollPhysics(
+                    decelerationRate: ScrollDecelerationRate.normal),
                 onSendPressed: _handleSendPressed,
+                onMessageTap: _handleMessageTap,
                 user: _user,
+                onAttachmentPressed: _handleAttachPressed,
               );
             }
-            // Handle other states, such as initial or error
             return const Center(
                 child: Text("No messages or an error occurred"));
           },
@@ -73,5 +134,11 @@ class _ChatPageState extends State<ChatPage> {
     );
 
     _chatBloc.add(SendMessageEvent(textMessage, widget.chatId));
+  }
+}
+
+void _handleMessageTap(BuildContext _, types.Message message) async {
+  if (message is types.FileMessage) {
+    await OpenFilex.open(message.uri);
   }
 }
