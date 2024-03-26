@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:padhaihub_v2/pdf_view.dart';
 import 'package:path/path.dart' as path;
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -12,7 +13,8 @@ import 'package:uuid/uuid.dart';
 import 'bloc/chat_bloc/chat_bloc.dart';
 import 'bloc/chat_bloc/chat_event.dart';
 import 'bloc/chat_bloc/chat_state.dart';
-import 'package:open_filex/open_filex.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 
 var uuid = const Uuid();
 
@@ -135,10 +137,24 @@ class _ChatPageState extends State<ChatPage> {
 
     _chatBloc.add(SendMessageEvent(textMessage, widget.chatId));
   }
-}
 
-void _handleMessageTap(BuildContext _, types.Message message) async {
-  if (message is types.FileMessage) {
-    await OpenFilex.open(message.uri);
+  void _handleMessageTap(BuildContext _, types.Message message) async {
+    try {
+      if (message is types.FileMessage) {
+        final filePath = await downloadPDF(message.uri, message.id);
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => PDFViewerPage(path: filePath),
+        ));
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: "$e");
+    }
+  }
+
+  Future<String> downloadPDF(String url, String fileName) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final filePath = '${directory.path}/$fileName';
+    final response = await Dio().download(url, filePath);
+    return filePath; // Path of the downloaded file
   }
 }

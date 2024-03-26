@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -58,7 +59,7 @@ class DatabaseRepository {
     }
   }
 
-  Stream<List<types.TextMessage>> getMessagesStream(String chatId) {
+  Stream<List<types.Message>> getMessagesStream(String chatId) {
     return firestore
         .collection('chats')
         .doc(chatId)
@@ -68,21 +69,39 @@ class DatabaseRepository {
         .map((snapshot) => snapshot.docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               final author = types.User(id: data['authorId']);
-              return types.TextMessage(
-                author: author,
-                createdAt: data['timestamp'] != null
-                    ? (data['timestamp'] as Timestamp).millisecondsSinceEpoch
-                    : DateTime.now().millisecondsSinceEpoch,
-                id: doc.id,
-                text: data['text'] ?? '',
-              );
+
+              // Check if the message is a text or file message
+              if (data['type'] == 'pdf') {
+                // Create a FileMessage for PDFs
+                return types.FileMessage(
+                  author: author,
+                  createdAt: data['timestamp'] != null
+                      ? (data['timestamp'] as Timestamp).millisecondsSinceEpoch
+                      : DateTime.now().millisecondsSinceEpoch,
+                  id: doc.id,
+                  mimeType: data['mimeType'],
+                  name: data['name'],
+                  size: data['size'],
+                  uri: data['uri'],
+                );
+              } else {
+                // Create a TextMessage for text
+                return types.TextMessage(
+                  author: author,
+                  createdAt: data['timestamp'] != null
+                      ? (data['timestamp'] as Timestamp).millisecondsSinceEpoch
+                      : DateTime.now().millisecondsSinceEpoch,
+                  id: doc.id,
+                  text: data['text'] ?? '',
+                );
+              }
             }).toList());
   }
 }
 
 class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
   final DatabaseRepository databaseRepository;
-
+  StreamSubscription<List<types.Message>>? _messagesSubscription;
   ChatBloc(this.databaseRepository) : super(ChatInitialState()) {
     on<LoadMessageEvent>(_onLoadMessageEvent);
     on<SendMessageEvent>(_onSendMessageEvent);
@@ -136,22 +155,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
   Future<void> _onSendFileMessageEvent(
       SendFileMessageEvent event, Emitter<ChatStateBloc> emit) async {
     try {
-      // Ensure event.message is a FileMessage and event.file is the File to upload
-      // ignore: unnecessary_type_check, unnecessary_null_comparison
-      if (event.message is types.FileMessage && event.file != null) {
-        await databaseRepository.storeFileMessage(
-            event.chatId, event.message, event.file);
-        // After successfully saving, you might fetch and emit updated messages
-        // This assumes you have a method to fetch messages
-        final updatedMessages =
-            databaseRepository.getMessagesStream(event.chatId);
-        emit(ChatMessagesUpdatedState(updatedMessages as List<types.Message>));
-      } else {
-        throw Exception(
-            "Invalid message type or missing file for file message event");
-      }
+      await databaseRepository.storeFileMessage(
+          event.chatId, event.message, event.file);
+
+      // Listen to the stream and emit updates.
+      // Note: Ensure you manage the subscription to avoid memory leaks.
+      databaseRepository.getMessagesStream(event.chatId).listen(
+        (updatedMessages) {
+          emit(ChatMessagesUpdatedState(updatedMessages));
+        },
+        onError: (error) {
+          emit(ChatErrorState(error.toString()));
+        },
+      );
     } catch (error) {
       emit(ChatErrorState(error.toString()));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _messagesSubscription?.cancel();
+    return super.close();
   }
 }
