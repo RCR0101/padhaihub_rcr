@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'chat_event.dart';
 import 'chat_state.dart';
 
@@ -20,6 +21,16 @@ class DatabaseRepository {
     });
   }
 
+  Future<void> updateMessageWithNewPdf(
+      String chatId, String messageId, String newPdfUrl) async {
+    await firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .doc(messageId)
+        .update({'fileUrl': newPdfUrl});
+  }
+
   Future<void> storeFileMessage(
       String chatId, types.FileMessage message, File file) async {
     // Ensure the file is a PDF by checking its extension
@@ -29,7 +40,7 @@ class DatabaseRepository {
     }
 
     // Define the path in Firebase Storage specifically for PDFs
-    String filePath = 'chat_attachments/$fileName';
+    String filePath = 'chat_attachments/$chatId/$fileName';
 
     try {
       // Upload PDF file to Firebase Storage
@@ -106,6 +117,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
     on<LoadMessageEvent>(_onLoadMessageEvent);
     on<SendMessageEvent>(_onSendMessageEvent);
     on<SendFileMessageEvent>(_onSendFileMessageEvent);
+    on<DeletePdfEvent>(_handleDeletePdfEvent);
+    // on<UploadNewPdfEvent>(_handleUploadNewPdf); have not implemented new pdf being uploaded
+    on<UpdateMessageReferenceEvent>(_handleUpdateMessageReference);
     _init();
   }
 
@@ -128,11 +142,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
     });
   }
 
-  // Example of handling a send message event with a chat ID
+  Future<void> _deleteMessage(String chatId, String messageId) async {
+    await FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .doc(messageId)
+        .delete();
+  }
+
+  Future<void> _handleUpdateMessageReference(
+      UpdateMessageReferenceEvent event, Emitter<ChatStateBloc> emit) async {
+    try {
+      await databaseRepository.updateMessageWithNewPdf(
+          event.chatId, event.messageId, event.newPdfUrl);
+      emit(UpdatedPdfState());
+    } catch (e) {
+      emit(ChatErrorState(e.toString()));
+    }
+  }
+
   Future<void> _onSendMessageEvent(
       SendMessageEvent event, Emitter<ChatStateBloc> emit) async {
     try {
-      // Assuming chatId is determined and passed along with the event
       await databaseRepository.storeMessage(event.chatId, event.message);
     } catch (e) {
       emit(ChatErrorState(e.toString()));
@@ -170,6 +202,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
       );
     } catch (error) {
       emit(ChatErrorState(error.toString()));
+    }
+  }
+
+  Future<void> _handleDeletePdfEvent(
+      DeletePdfEvent event, Emitter<ChatStateBloc> emit) async {
+    try {
+      //await FirebaseStorage.instance.ref(event.storagePath).delete(); fix this line, not deleting from storage, works fine otherwise
+      await _deleteMessage(event.chatId, event.messageId);
+      emit(DeletedPdfState());
+    } catch (e) {
+      Fluttertoast.showToast(msg: "$e");
     }
   }
 

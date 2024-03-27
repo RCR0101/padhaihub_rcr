@@ -63,44 +63,48 @@ class MyLandingPage extends StatelessWidget {
                   ),
                 ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  actionButton(
-                    context,
-                    Icons.notes_rounded,
-                    "Notes",
-                    () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const MyNotesPage()));
-                    },
-                  ), // Adjust spacing as needed
-                  actionButton(
-                    context,
-                    Icons.message,
-                    "Chats",
-                    () {
-                      // Define what the "Chats" button should do
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => UsersListPage()));
-                    },
-                  ), // Adjust spacing as needed
-                  actionButton(
-                    context,
-                    Icons.person,
-                    "Profile",
-                    () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const MyProfilePage()));
-                    },
-                  ),
-                ],
+              SizedBox(
+                width: screenSize.width,
+                height: screenSize.height * 0.08,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    actionButton(
+                      context,
+                      Icons.notes_rounded,
+                      "Notes",
+                      () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MyNotesPage()));
+                      },
+                    ), // Adjust spacing as needed
+                    actionButton(
+                      context,
+                      Icons.message,
+                      "Chats",
+                      () {
+                        // Define what the "Chats" button should do
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => UsersListPage()));
+                      },
+                    ), // Adjust spacing as needed
+                    actionButton(
+                      context,
+                      Icons.person,
+                      "Profile",
+                      () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MyProfilePage()));
+                      },
+                    ),
+                  ],
+                ),
               ),
 
               SizedBox(

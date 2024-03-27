@@ -23,3 +23,30 @@ class SendFileMessageEvent extends ChatEvent {
   final File file;
   SendFileMessageEvent(this.message, this.chatId, this.file);
 }
+
+class DeletePdfEvent extends ChatEvent {
+  final String chatId;
+  final String messageId;
+  final String storagePath;
+
+  DeletePdfEvent(
+      {required this.chatId,
+      required this.messageId,
+      required this.storagePath});
+}
+
+class UploadNewPdfEvent extends ChatEvent {
+  final String chatId;
+  final String messageId;
+  final File newPdfFile;
+
+  UploadNewPdfEvent(this.chatId, this.messageId, this.newPdfFile);
+}
+
+class UpdateMessageReferenceEvent extends ChatEvent {
+  final String chatId;
+  final String messageId;
+  final String newPdfUrl;
+
+  UpdateMessageReferenceEvent(this.chatId, this.messageId, this.newPdfUrl);
+}

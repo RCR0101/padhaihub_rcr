@@ -6,6 +6,10 @@ class ChatInitialState extends ChatStateBloc {}
 
 class ChatLoadingState extends ChatStateBloc {}
 
+class DeletedPdfState extends ChatStateBloc {}
+
+class UpdatedPdfState extends ChatStateBloc {}
+
 class ChatMessagesUpdatedState extends ChatStateBloc {
   final List<types.Message> messages;
 

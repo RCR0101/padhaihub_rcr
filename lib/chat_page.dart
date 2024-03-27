@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:io';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:padhaihub_v2/pdf_view.dart';
@@ -32,7 +34,6 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   late types.User _user;
   late ChatBloc _chatBloc;
-
   @override
   void initState() {
     super.initState();
@@ -54,7 +55,8 @@ class _ChatPageState extends State<ChatPage> {
 
       try {
         // Upload to Firebase Storage
-        String destination = 'chat_attachments/$fileName';
+        var chatIdmain = widget.chatId;
+        String destination = 'chat_attachments/$chatIdmain/$fileName';
         await FirebaseStorage.instance.ref(destination).putFile(file);
 
         // After the upload is complete, you might want to send a message
@@ -69,7 +71,7 @@ class _ChatPageState extends State<ChatPage> {
           size: result.files.single.size,
           uri: fileUrl,
         );
-        _chatBloc.add(SendFileMessageEvent(message, widget.chatId, file));
+        _chatBloc.add(SendFileMessageEvent(message, chatIdmain, file));
       } catch (e) {
         Fluttertoast.showToast(msg: "$e", gravity: ToastGravity.CENTER);
       }
@@ -100,6 +102,9 @@ class _ChatPageState extends State<ChatPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.error)),
               );
+            } else if (state is DeletedPdfState) {
+              Fluttertoast.showToast(msg: "PDF and Message Deleted");
+              _chatBloc.add(LoadMessageEvent(widget.chatId));
             }
           },
           builder: (context, state) {
@@ -108,15 +113,19 @@ class _ChatPageState extends State<ChatPage> {
             } else if (state is ChatMessagesUpdatedState) {
               return Chat(
                 theme: DarkChatTheme(
-                  inputBackgroundColor: Colors.teal.shade300,
-                  backgroundColor: Colors.teal.shade300,
-                ),
+                    inputBackgroundColor: Colors.teal.shade300,
+                    backgroundColor: Colors.teal.shade300,
+                    receivedMessageDocumentIconColor: Colors.white,
+                    sentMessageDocumentIconColor: Colors.white,
+                    attachmentButtonIcon: const Icon(Icons.attach_file_rounded,
+                        color: Colors.black),
+                    inputTextColor: Colors.black),
                 messages: state.messages,
-                // ignore: prefer_const_constructors
                 scrollPhysics: BouncingScrollPhysics(
                     decelerationRate: ScrollDecelerationRate.normal),
                 onSendPressed: _handleSendPressed,
                 onMessageTap: _handleMessageTap,
+                onMessageLongPress: _handleMessageLongPress,
                 user: _user,
                 onAttachmentPressed: _handleAttachPressed,
               );
@@ -149,6 +158,85 @@ class _ChatPageState extends State<ChatPage> {
     } catch (e) {
       Fluttertoast.showToast(msg: "$e");
     }
+  }
+
+  void _handleMessageLongPress(BuildContext _, types.Message message) async {
+    var screenSize = MediaQuery.of(context).size;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          alignment: Alignment.center,
+          backgroundColor: Colors.black,
+          title: Text(
+            "Message Options",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Delete"),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      alignment: Alignment.center,
+                      backgroundColor: Colors.black,
+                      title: Text(
+                        "Are you sure you want to delete this?",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text("Yes"),
+                          onPressed: () async {
+                            if (message is types.FileMessage) {
+                              BlocProvider.of<ChatBloc>(context).add(
+                                DeletePdfEvent(
+                                  chatId: widget.chatId,
+                                  messageId: message.id,
+                                  storagePath: message.uri,
+                                ),
+                              );
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        ),
+                        TextButton(
+                          child: Text("No"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        )
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            TextButton(
+              child: Text("Edit"),
+              onPressed: () {
+                // Implement message editing logic
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            SizedBox(
+              width: screenSize.width * 0.015,
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<String> downloadPDF(String url, String fileName) async {

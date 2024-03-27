@@ -90,20 +90,24 @@ class MyHomePage extends StatelessWidget {
                   if (state is SignInLoadingState) {
                     return const CircularProgressIndicator();
                   }
-                  return ElevatedButton.icon(
-                    onPressed: () {
-                      BlocProvider.of<SignInBloc>(context)
-                          .add(SignInWithGooglePressed());
-                    },
-                    icon: const Icon(Icons.person, color: Colors.black),
-                    label: Text(
-                      'Login',
-                      style: GoogleFonts.anta(
-                        textStyle: const TextStyle(
-                            color: Colors.black,
-                            letterSpacing: .5,
-                            fontSize:
-                                20), // Consider making font size responsive if needed
+                  return SizedBox(
+                    width: screenSize.width * 0.34,
+                    height: screenSize.height * 0.05,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        BlocProvider.of<SignInBloc>(context)
+                            .add(SignInWithGooglePressed());
+                      },
+                      icon: const Icon(Icons.person, color: Colors.black),
+                      label: Text(
+                        'Login',
+                        style: GoogleFonts.anta(
+                          textStyle: TextStyle(
+                              color: Colors.black,
+                              letterSpacing: .5,
+                              fontSize: MediaQuery.of(context).size.width *
+                                  0.05), // Consider making font size responsive if needed
+                        ),
                       ),
                     ),
                   );
