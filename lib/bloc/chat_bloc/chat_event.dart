@@ -47,6 +47,7 @@ class UpdateMessageReferenceEvent extends ChatEvent {
   final String chatId;
   final String messageId;
   final String newPdfUrl;
-
-  UpdateMessageReferenceEvent(this.chatId, this.messageId, this.newPdfUrl);
+  final String newName;
+  UpdateMessageReferenceEvent(
+      this.chatId, this.messageId, this.newPdfUrl, this.newName);
 }

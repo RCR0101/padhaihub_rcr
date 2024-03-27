@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-
+import 'package:path/path.dart' as path;
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -22,13 +22,17 @@ class DatabaseRepository {
   }
 
   Future<void> updateMessageWithNewPdf(
-      String chatId, String messageId, String newPdfUrl) async {
+      String chatId, String messageId, String newPdfUrl, String newName) async {
     await firestore
         .collection('chats')
         .doc(chatId)
         .collection('messages')
         .doc(messageId)
-        .update({'fileUrl': newPdfUrl});
+        .update({
+      'name': newName,
+      'timestamp': FieldValue.serverTimestamp(),
+      'uri': newPdfUrl,
+    });
   }
 
   Future<void> storeFileMessage(
@@ -118,7 +122,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
     on<SendMessageEvent>(_onSendMessageEvent);
     on<SendFileMessageEvent>(_onSendFileMessageEvent);
     on<DeletePdfEvent>(_handleDeletePdfEvent);
-    // on<UploadNewPdfEvent>(_handleUploadNewPdf); have not implemented new pdf being uploaded
+    on<UploadNewPdfEvent>(_handleUploadNewPdf);
     on<UpdateMessageReferenceEvent>(_handleUpdateMessageReference);
     _init();
   }
@@ -151,12 +155,45 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
         .delete();
   }
 
+  Future<void> _handleUploadNewPdf(
+      UploadNewPdfEvent event, Emitter<ChatStateBloc> emit) async {
+    // Ensure the file is a PDF by checking its extension
+    final String fileName = path.basename(event.newPdfFile.path);
+    if (!fileName.toLowerCase().endsWith('.pdf')) {
+      throw Exception("Only PDF files are supported.");
+    }
+
+    // Define the path in Firebase Storage specifically for PDFs
+    String filePath = 'chat_attachments/${event.chatId}/$fileName';
+
+    try {
+      // Upload PDF file to Firebase Storage
+      await FirebaseStorage.instance.ref(filePath).putFile(event.newPdfFile);
+
+      // Get download URL
+      final fileUrl =
+          await FirebaseStorage.instance.ref(filePath).getDownloadURL();
+      final updateEvent = UpdateMessageReferenceEvent(
+          event.chatId, event.messageId, fileUrl, fileName);
+      add(updateEvent);
+    } catch (e) {
+      throw Exception("Failed to store PDF file message: $e");
+    }
+  }
+
   Future<void> _handleUpdateMessageReference(
       UpdateMessageReferenceEvent event, Emitter<ChatStateBloc> emit) async {
     try {
       await databaseRepository.updateMessageWithNewPdf(
-          event.chatId, event.messageId, event.newPdfUrl);
-      emit(UpdatedPdfState());
+          event.chatId, event.messageId, event.newPdfUrl, event.newName);
+      databaseRepository.getMessagesStream(event.chatId).listen(
+        (updatedMessages) {
+          emit(ChatMessagesUpdatedState(updatedMessages));
+        },
+        onError: (error) {
+          emit(ChatErrorState(error.toString()));
+        },
+      );
     } catch (e) {
       emit(ChatErrorState(e.toString()));
     }

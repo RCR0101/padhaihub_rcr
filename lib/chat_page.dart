@@ -55,8 +55,7 @@ class _ChatPageState extends State<ChatPage> {
 
       try {
         // Upload to Firebase Storage
-        var chatIdmain = widget.chatId;
-        String destination = 'chat_attachments/$chatIdmain/$fileName';
+        String destination = 'chat_attachments/${widget.chatId}/$fileName';
         await FirebaseStorage.instance.ref(destination).putFile(file);
 
         // After the upload is complete, you might want to send a message
@@ -71,7 +70,7 @@ class _ChatPageState extends State<ChatPage> {
           size: result.files.single.size,
           uri: fileUrl,
         );
-        _chatBloc.add(SendFileMessageEvent(message, chatIdmain, file));
+        _chatBloc.add(SendFileMessageEvent(message, widget.chatId, file));
       } catch (e) {
         Fluttertoast.showToast(msg: "$e", gravity: ToastGravity.CENTER);
       }
@@ -102,9 +101,6 @@ class _ChatPageState extends State<ChatPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.error)),
               );
-            } else if (state is DeletedPdfState) {
-              Fluttertoast.showToast(msg: "PDF and Message Deleted");
-              _chatBloc.add(LoadMessageEvent(widget.chatId));
             }
           },
           builder: (context, state) {
@@ -200,8 +196,16 @@ class _ChatPageState extends State<ChatPage> {
                                   storagePath: message.uri,
                                 ),
                               );
+                              BlocProvider.of<ChatBloc>(context).add(
+                                LoadMessageEvent(
+                                  widget.chatId,
+                                ),
+                              );
                               Navigator.of(context).pop();
                               Navigator.of(context).pop();
+                              Fluttertoast.showToast(
+                                  msg: "PDF and Message Deleted",
+                                  gravity: ToastGravity.TOP);
                             }
                           },
                         ),
@@ -219,9 +223,27 @@ class _ChatPageState extends State<ChatPage> {
             ),
             TextButton(
               child: Text("Edit"),
-              onPressed: () {
-                // Implement message editing logic
-                Navigator.of(context).pop(); // Close the dialog
+              onPressed: () async {
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'], // Ensure only PDFs can be picked
+                );
+
+                if (result != null) {
+                  File newPdfFile =
+                      File(result.files.single.path!); // Get the new file
+
+                  if (message is types.FileMessage) {
+                    // Trigger the event with the new PDF file
+                    _chatBloc.add(UploadNewPdfEvent(
+                        widget.chatId, message.id, newPdfFile));
+                  }
+                } else {
+                  // Optionally handle the case where no file was selected
+                  Fluttertoast.showToast(msg: "No file selected");
+                }
+
+                Navigator.of(context).pop(); // Close the dialog after handling
               },
             ),
             TextButton(
