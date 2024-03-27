@@ -157,6 +157,12 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleMessageLongPress(BuildContext _, types.Message message) async {
+    if (message.author.id != _user.id) {
+      // Current user is not the author of the message
+      Fluttertoast.showToast(
+          msg: "You can't edit or delete someone else's message.");
+      return;
+    }
     var screenSize = MediaQuery.of(context).size;
     showDialog(
       context: context,

@@ -30,7 +30,6 @@ class DatabaseRepository {
         .doc(messageId)
         .update({
       'name': newName,
-      'timestamp': FieldValue.serverTimestamp(),
       'uri': newPdfUrl,
     });
   }
