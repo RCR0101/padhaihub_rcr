@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-import 'package:fluttertoast/fluttertoast.dart';
 import 'notes_event.dart';
 import 'notes_state.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

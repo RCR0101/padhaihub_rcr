@@ -14,17 +14,38 @@ class UsersListPage extends StatefulWidget {
 }
 
 class _UsersListPageState extends State<UsersListPage> {
-  Future<List<User_D>> getUsersFromFirestore() async {
-    QuerySnapshot snapshot =
-        await FirebaseFirestore.instance.collection('users').get();
+  Future<List<User_D>> getUsersWithNonEmptyChats() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return [];
 
-    return snapshot.docs
+    // Fetch all users first (same as before)
+    QuerySnapshot userSnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+    List<User_D> allUsers = userSnapshot.docs
         .map((doc) => User_D(
             id: doc.id,
             name: doc['name'],
             email: doc['email'],
             imageUrl: doc['imageUrl']))
         .toList();
+
+    // List to keep track of users with non-empty chats
+    List<User_D> usersWithNonEmptyChats = [];
+
+    // Check each user for non-empty chat
+    for (var user in allUsers) {
+      String chatId = determineChatId(currentUser.uid, user.id);
+      final chatRef =
+          FirebaseFirestore.instance.collection('chats').doc(chatId);
+      final snapshot = await chatRef.collection('messages').limit(1).get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // Chat is non-empty
+        usersWithNonEmptyChats.add(user);
+      }
+    }
+
+    return usersWithNonEmptyChats;
   }
 
   @override
@@ -63,7 +84,7 @@ class _UsersListPageState extends State<UsersListPage> {
         ],
       ),
       body: FutureBuilder<List<User_D>>(
-        future: getUsersFromFirestore(),
+        future: getUsersWithNonEmptyChats(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -103,6 +124,12 @@ class _UsersListPageState extends State<UsersListPage> {
         },
       ),
     );
+  }
+
+  Future<bool> isChatNonEmpty(String chatId) async {
+    final chatRef = FirebaseFirestore.instance.collection('chats').doc(chatId);
+    final snapshot = await chatRef.collection('messages').limit(1).get();
+    return snapshot.docs.isNotEmpty;
   }
 }
 

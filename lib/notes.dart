@@ -28,6 +28,7 @@ class MyNotesPage extends StatelessWidget {
       home: Scaffold(
         backgroundColor: Colors.teal.shade300,
         appBar: AppBar(
+          centerTitle: true,
           leading: IconButton(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back),
@@ -49,6 +50,9 @@ class MyNotesPage extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: [
+              SizedBox(
+                height: screenSize.height * 0.01,
+              ),
               Expanded(
                 child: _buildPdfList(context),
               ),
@@ -98,9 +102,17 @@ class MyNotesPage extends StatelessWidget {
             itemCount: state.pdfMessages.length,
             itemBuilder: (context, index) {
               final fileMessage = state.pdfMessages[index];
-              return ListTile(
-                title: Text(fileMessage.id),
-                onTap: () => _handleMessageTap(context, fileMessage),
+              return Card(
+                color: Colors.cyan.shade300,
+                borderOnForeground: false,
+                elevation: 2.0,
+                child: ListTile(
+                  title: Text(
+                    fileMessage.id,
+                    textAlign: TextAlign.center,
+                  ),
+                  onTap: () => _handleMessageTap(context, fileMessage),
+                ),
               );
             },
           );
