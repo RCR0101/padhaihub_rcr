@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:padhaihub_v2/bloc/notes_bloc/notes_bloc.dart';
 import 'package:padhaihub_v2/chat_list.dart';
 import 'package:padhaihub_v2/notes.dart';
 import 'package:padhaihub_v2/profile_page.dart';
@@ -67,31 +69,35 @@ class MyLandingPage extends StatelessWidget {
                 width: screenSize.width,
                 height: screenSize.height * 0.08,
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     actionButton(
                       context,
                       Icons.notes_rounded,
-                      "Notes",
+                      "Broadcast",
                       () {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const MyNotesPage()));
+                              builder: (context) => BlocProvider(
+                                create: (context) => BroadcastBLoC(),
+                                child: MyNotesPage(),
+                              ),
+                            ));
                       },
-                    ), // Adjust spacing as needed
+                    ),
                     actionButton(
                       context,
                       Icons.message,
                       "Chats",
                       () {
-                        // Define what the "Chats" button should do
                         Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => UsersListPage()));
                       },
-                    ), // Adjust spacing as needed
+                    ),
                     actionButton(
                       context,
                       Icons.person,
@@ -107,9 +113,7 @@ class MyLandingPage extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(
-                  height: screenSize.height *
-                      0.01), // Adjusted size using screen height
+              SizedBox(height: screenSize.height * 0.01),
             ],
           ),
         ),
@@ -126,8 +130,7 @@ class MyLandingPage extends StatelessWidget {
         foregroundColor: Colors.black,
         minimumSize: const Size(60, 60),
       ),
-      onPressed:
-          onPressed, // Use the onPressed parameter for the button's functionality
+      onPressed: onPressed,
       child: Row(
         children: <Widget>[
           Icon(icon),

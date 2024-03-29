@@ -270,6 +270,7 @@ class _ChatPageState extends State<ChatPage> {
   Future<String> downloadPDF(String url, String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     final filePath = '${directory.path}/$fileName';
+    // ignore: unused_local_variable
     final response = await Dio().download(url, filePath);
     return filePath; // Path of the downloaded file
   }

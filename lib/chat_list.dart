@@ -55,7 +55,7 @@ class _UsersListPageState extends State<UsersListPage> {
                   MaterialPageRoute(builder: (context) => NewUsersListPage()));
             },
             icon: const Icon(
-              Icons.add,
+              Icons.search,
               color: Colors.black,
             ),
             alignment: Alignment.centerRight,
