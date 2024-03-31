@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path/path.dart' as path;
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,9 +32,12 @@ class DatabaseRepository {
     await firestore.runTransaction((transaction) async {
       DocumentSnapshot userUnreadSnapshot =
           await transaction.get(userUnreadRef);
-      if (userUnreadSnapshot.exists) {
+      if (userUnreadSnapshot.exists &&
+          userId != FirebaseAuth.instance.currentUser?.uid) {
         int currentUnread = userUnreadSnapshot['unreadCount'] ?? 0;
         transaction.update(userUnreadRef, {'unreadCount': currentUnread + 1});
+      } else if (userId == FirebaseAuth.instance.currentUser?.uid) {
+        transaction.set(userUnreadRef, {'unreadCount': 0});
       } else {
         transaction.set(userUnreadRef, {'unreadCount': 1});
       }
@@ -45,7 +49,8 @@ class DatabaseRepository {
         .collection('chats')
         .doc(chatId)
         .collection('unreads')
-        .doc(userId); // Reference to the user's unread document
+        .doc(FirebaseAuth.instance.currentUser
+            ?.uid); // Reference to the user's unread document
 
     await firestore.runTransaction((transaction) async {
       DocumentSnapshot userUnreadSnapshot =

@@ -74,6 +74,15 @@ class _ChatPageState extends State<ChatPage> {
     } else {
       Fluttertoast.showToast(msg: "No File Selected");
     }
+    List<String> userIds = widget.chatId.split('_');
+    String recipientId =
+        userIds.firstWhere((id) => id == widget.userId, orElse: () => '');
+
+    if (recipientId.isNotEmpty) {
+      context
+          .read<ChatBloc>()
+          .add(IncrementUnreadMessages(widget.chatId, recipientId));
+    }
   }
 
   @override
@@ -82,11 +91,8 @@ class _ChatPageState extends State<ChatPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        if (widget.chatId == FirebaseAuth.instance.currentUser?.uid) {
-          context
-              .read<ChatBloc>()
-              .add(ResetUnreadMessages(widget.chatId, widget.userId));
-        }
+        context.read<ChatBloc>().add(ResetUnreadMessages(
+            widget.chatId, FirebaseAuth.instance.currentUser!.uid));
         return true;
       },
       child: Scaffold(
@@ -147,11 +153,16 @@ class _ChatPageState extends State<ChatPage> {
       text: message.text,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
-
     _chatBloc.add(SendMessageEvent(textMessage, widget.chatId));
-    context
-        .read<ChatBloc>()
-        .add(IncrementUnreadMessages(widget.chatId, widget.userId));
+    List<String> userIds = widget.chatId.split('_');
+    String recipientId =
+        userIds.firstWhere((id) => id == widget.userId, orElse: () => '');
+
+    if (recipientId.isNotEmpty) {
+      context
+          .read<ChatBloc>()
+          .add(IncrementUnreadMessages(widget.chatId, recipientId));
+    }
   }
 
   void _handleMessageTap(BuildContext _, types.Message message) async {

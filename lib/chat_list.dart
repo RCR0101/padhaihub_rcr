@@ -112,26 +112,14 @@ class _UsersListPageState extends State<UsersListPage> {
                       right: -6,
                       top: -6,
                       child: FutureBuilder<int>(
-                        future: fetchUnreadCount(chatId, user.id),
+                        future: fetchUnreadCount(
+                            chatId, FirebaseAuth.instance.currentUser!.uid),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
                             return Container();
                           } else if (snapshot.hasError || snapshot.data == 0) {
-                            return Container(
-                              padding: EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '${snapshot.data}',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            );
+                            return Container();
                           } else {
                             return Container(
                               padding: EdgeInsets.all(6),
