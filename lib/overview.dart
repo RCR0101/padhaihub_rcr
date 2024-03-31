@@ -6,6 +6,9 @@ import 'package:padhaihub_v2/chat_list.dart';
 import 'package:padhaihub_v2/notes.dart';
 import 'package:padhaihub_v2/profile_page.dart';
 
+import 'bloc/profile_bloc/profile_bloc.dart';
+import 'bloc/profile_bloc/profile_event.dart';
+
 class MyLandingPage extends StatelessWidget {
   final String title;
 
@@ -106,7 +109,12 @@ class MyLandingPage extends StatelessWidget {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const MyProfilePage()));
+                              builder: (context) => BlocProvider<ProfileBloc>(
+                                create: (context) =>
+                                    ProfileBloc()..add(LoadUserProfile()),
+                                child: MyProfilePage(),
+                              ),
+                            ));
                       },
                     ),
                   ],

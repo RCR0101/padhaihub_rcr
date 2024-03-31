@@ -51,3 +51,17 @@ class UpdateMessageReferenceEvent extends ChatEvent {
   UpdateMessageReferenceEvent(
       this.chatId, this.messageId, this.newPdfUrl, this.newName);
 }
+
+class IncrementUnreadMessages extends ChatEvent {
+  final String chatId;
+  final String userId;
+
+  IncrementUnreadMessages(this.chatId, this.userId);
+}
+
+class ResetUnreadMessages extends ChatEvent {
+  final String chatId;
+  final String userId;
+
+  ResetUnreadMessages(this.chatId, this.userId);
+}

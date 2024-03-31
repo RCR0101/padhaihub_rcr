@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'bloc/chat_bloc/chat_bloc.dart';
 import 'chat_page.dart';
 import 'user_data/user_model.dart';
-import 'package:google_fonts/google_fonts.dart'; // Assuming you have a User model class
+import 'package:google_fonts/google_fonts.dart';
 
 class NewUsersListPage extends StatefulWidget {
   @override
@@ -13,9 +13,8 @@ class NewUsersListPage extends StatefulWidget {
 }
 
 class _NewUsersListPageState extends State<NewUsersListPage> {
-  List<User_D> allUsers =
-      []; // Initially empty, will be filled with users from Firestore
-  List<User_D> filteredUsers = []; // Initially empty, updated based on search
+  List<User_D> allUsers = [];
+  List<User_D> filteredUsers = [];
 
   @override
   void initState() {
@@ -57,11 +56,9 @@ class _NewUsersListPageState extends State<NewUsersListPage> {
           style: GoogleFonts.abel(
               textStyle: TextStyle(
                   color: Colors.white,
-                  fontSize: screenSize.width *
-                      0.08, // Adjusted size using screen width
+                  fontSize: screenSize.width * 0.08,
                   fontWeight: FontWeight.w500,
-                  letterSpacing:
-                      screenSize.width * 0.03)), // Adjusted letter spacing
+                  letterSpacing: screenSize.width * 0.03)),
         ),
         backgroundColor: Colors.teal.shade300,
         foregroundColor: Colors.black,
@@ -102,12 +99,9 @@ class _NewUsersListPageState extends State<NewUsersListPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 if (!snapshot.hasData) {
                   return const Center(child: Text('No users found'));
                 }
-
-                final users = snapshot.data!;
                 return ListView.builder(
                   itemCount: filteredUsers.length,
                   itemBuilder: (context, index) {
@@ -152,11 +146,8 @@ String toCapitalCase(String input) {
 }
 
 String determineChatId(String currentUserId, String otherUserId) {
-  // Ensure the order is always the same by sorting
   List<String> ids = [currentUserId, otherUserId];
   ids.sort();
-
-  // Concatenate the sorted user IDs to form the chat ID
   String chatId = ids.join('_');
   return chatId;
 }

@@ -21,6 +21,43 @@ class DatabaseRepository {
     });
   }
 
+  Future<void> incrementUnreadMessages(String chatId, String userId) async {
+    DocumentReference userUnreadRef = firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('unreads')
+        .doc(userId); // Reference to the user's unread document
+
+    await firestore.runTransaction((transaction) async {
+      DocumentSnapshot userUnreadSnapshot =
+          await transaction.get(userUnreadRef);
+      if (userUnreadSnapshot.exists) {
+        int currentUnread = userUnreadSnapshot['unreadCount'] ?? 0;
+        transaction.update(userUnreadRef, {'unreadCount': currentUnread + 1});
+      } else {
+        transaction.set(userUnreadRef, {'unreadCount': 1});
+      }
+    });
+  }
+
+  Future<void> resetUnreadMessages(String chatId, String userId) async {
+    DocumentReference userUnreadRef = firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('unreads')
+        .doc(userId); // Reference to the user's unread document
+
+    await firestore.runTransaction((transaction) async {
+      DocumentSnapshot userUnreadSnapshot =
+          await transaction.get(userUnreadRef);
+      if (userUnreadSnapshot.exists) {
+        transaction.update(userUnreadRef, {'unreadCount': 0});
+      } else {
+        transaction.set(userUnreadRef, {'unreadCount': 0});
+      }
+    });
+  }
+
   Future<void> updateMessageWithNewPdf(
       String chatId, String messageId, String newPdfUrl, String newName) async {
     await firestore
@@ -123,6 +160,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
     on<DeletePdfEvent>(_handleDeletePdfEvent);
     on<UploadNewPdfEvent>(_handleUploadNewPdf);
     on<UpdateMessageReferenceEvent>(_handleUpdateMessageReference);
+    on<IncrementUnreadMessages>((event, emit) async {
+      await databaseRepository.incrementUnreadMessages(
+          event.chatId, event.userId);
+    });
+    on<ResetUnreadMessages>((event, emit) async {
+      await databaseRepository.resetUnreadMessages(event.chatId, event.userId);
+      // Optionally emit a state or handle errors
+    });
     _init();
   }
 

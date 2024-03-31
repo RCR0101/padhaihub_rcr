@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:padhaihub_v2/pdf_view.dart';
 import 'package:path/path.dart' as path;
@@ -43,7 +44,6 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _handleAttachPressed() async {
-    // Use FilePicker to let the user select a file
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
@@ -57,9 +57,6 @@ class _ChatPageState extends State<ChatPage> {
         // Upload to Firebase Storage
         String destination = 'chat_attachments/${widget.chatId}/$fileName';
         await FirebaseStorage.instance.ref(destination).putFile(file);
-
-        // After the upload is complete, you might want to send a message
-        // in your chat that contains the download URL or a reference to the file
         String fileUrl =
             await FirebaseStorage.instance.ref(destination).getDownloadURL();
         final message = types.FileMessage(
@@ -82,54 +79,65 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
-    return Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: Text('Chat',
-              style: GoogleFonts.abel(
-                  textStyle: TextStyle(
-                      color: Colors.white,
-                      fontSize: screenSize.width *
-                          0.08, // Adjusted size using screen width
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: screenSize.width * 0.03))),
-          backgroundColor: Colors.teal.shade300,
-        ),
-        body: BlocConsumer<ChatBloc, ChatStateBloc>(
-          listener: (context, state) {
-            if (state is ChatErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error)),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is ChatLoadingState) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is ChatMessagesUpdatedState) {
-              return Chat(
-                theme: DarkChatTheme(
-                    inputBackgroundColor: Colors.teal.shade300,
-                    backgroundColor: Colors.teal.shade300,
-                    receivedMessageDocumentIconColor: Colors.white,
-                    sentMessageDocumentIconColor: Colors.white,
-                    attachmentButtonIcon: const Icon(Icons.attach_file_rounded,
-                        color: Colors.black),
-                    inputTextColor: Colors.black),
-                messages: state.messages,
-                scrollPhysics: BouncingScrollPhysics(
-                    decelerationRate: ScrollDecelerationRate.normal),
-                onSendPressed: _handleSendPressed,
-                onMessageTap: _handleMessageTap,
-                onMessageLongPress: _handleMessageLongPress,
-                user: _user,
-                onAttachmentPressed: _handleAttachPressed,
-              );
-            }
-            return const Center(
-                child: Text("No messages or an error occurred"));
-          },
-        ));
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async {
+        if (widget.chatId == FirebaseAuth.instance.currentUser?.uid) {
+          context
+              .read<ChatBloc>()
+              .add(ResetUnreadMessages(widget.chatId, widget.userId));
+        }
+        return true;
+      },
+      child: Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            title: Text('Chat',
+                style: GoogleFonts.abel(
+                    textStyle: TextStyle(
+                        color: Colors.white,
+                        fontSize: screenSize.width * 0.08,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: screenSize.width * 0.03))),
+            backgroundColor: Colors.teal.shade300,
+          ),
+          body: BlocConsumer<ChatBloc, ChatStateBloc>(
+            listener: (context, state) {
+              if (state is ChatErrorState) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.error)),
+                );
+              }
+            },
+            builder: (context, state) {
+              if (state is ChatLoadingState) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ChatMessagesUpdatedState) {
+                return Chat(
+                  theme: DarkChatTheme(
+                      inputBackgroundColor: Colors.teal.shade300,
+                      backgroundColor: Colors.teal.shade300,
+                      receivedMessageDocumentIconColor: Colors.white,
+                      sentMessageDocumentIconColor: Colors.white,
+                      attachmentButtonIcon: const Icon(
+                          Icons.attach_file_rounded,
+                          color: Colors.black),
+                      inputTextColor: Colors.black),
+                  messages: state.messages,
+                  scrollPhysics: BouncingScrollPhysics(
+                      decelerationRate: ScrollDecelerationRate.normal),
+                  onSendPressed: _handleSendPressed,
+                  onMessageTap: _handleMessageTap,
+                  onMessageLongPress: _handleMessageLongPress,
+                  user: _user,
+                  onAttachmentPressed: _handleAttachPressed,
+                );
+              }
+              return const Center(
+                  child: Text("No messages or an error occurred"));
+            },
+          )),
+    );
   }
 
   void _handleSendPressed(types.PartialText message) {
@@ -141,6 +149,9 @@ class _ChatPageState extends State<ChatPage> {
     );
 
     _chatBloc.add(SendMessageEvent(textMessage, widget.chatId));
+    context
+        .read<ChatBloc>()
+        .add(IncrementUnreadMessages(widget.chatId, widget.userId));
   }
 
   void _handleMessageTap(BuildContext _, types.Message message) async {

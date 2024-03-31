@@ -18,7 +18,6 @@ class _UsersListPageState extends State<UsersListPage> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return [];
 
-    // Fetch all users first (same as before)
     QuerySnapshot userSnapshot =
         await FirebaseFirestore.instance.collection('users').get();
     List<User_D> allUsers = userSnapshot.docs
@@ -40,7 +39,6 @@ class _UsersListPageState extends State<UsersListPage> {
       final snapshot = await chatRef.collection('messages').limit(1).get();
 
       if (snapshot.docs.isNotEmpty) {
-        // Chat is non-empty
         usersWithNonEmptyChats.add(user);
       }
     }
@@ -102,9 +100,58 @@ class _UsersListPageState extends State<UsersListPage> {
               String chatId = determineChatId(
                   FirebaseAuth.instance.currentUser!.uid, user.id);
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: NetworkImage(user.imageUrl),
-                  backgroundColor: Colors.transparent,
+                leading: Stack(
+                  clipBehavior: Clip
+                      .none, // Allows the badge to go outside the Stack's bounds
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(user.imageUrl),
+                      backgroundColor: Colors.transparent,
+                    ),
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: FutureBuilder<int>(
+                        future: fetchUnreadCount(chatId, user.id),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Container();
+                          } else if (snapshot.hasError || snapshot.data == 0) {
+                            return Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${snapshot.data}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          } else {
+                            return Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${snapshot.data}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 title: Text(toCapitalCase(user.name)),
                 onTap: () {
@@ -148,4 +195,25 @@ String determineChatId(String currentUserId, String otherUserId) {
   // Concatenate the sorted user IDs to form the chat ID
   String chatId = ids.join('_');
   return chatId;
+}
+
+Future<int> fetchUnreadCount(String chatId, String userId) async {
+  DocumentReference unreadCountRef = FirebaseFirestore.instance
+      .collection('chats')
+      .doc(chatId)
+      .collection('unreads')
+      .doc(userId);
+
+  try {
+    DocumentSnapshot snapshot = await unreadCountRef.get();
+    int unreadCount = snapshot.get('unreadCount');
+    return unreadCount;
+  } on StateError {
+    // Field does not exist
+    return 0;
+  } catch (e) {
+    // Handle any other errors
+    print("Error fetching unread count: $e");
+    return 0;
+  }
 }
