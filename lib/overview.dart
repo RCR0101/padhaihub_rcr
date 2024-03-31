@@ -68,60 +68,56 @@ class MyLandingPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
-                width: screenSize.width,
-                height: screenSize.height * 0.08,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    actionButton(
+            ],
+          ),
+        ),
+        bottomNavigationBar: BottomAppBar(
+          color: Colors.transparent,
+          elevation: 0,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              actionButton(
+                context,
+                Icons.notes_rounded,
+                "Broadcast",
+                () {
+                  Navigator.push(
                       context,
-                      Icons.notes_rounded,
-                      "Broadcast",
-                      () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BlocProvider(
-                                create: (context) => BroadcastBLoC(),
-                                child: MyNotesPage(),
-                              ),
-                            ));
-                      },
-                    ),
-                    actionButton(
-                      context,
-                      Icons.message,
-                      "Chats",
-                      () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => UsersListPage()));
-                      },
-                    ),
-                    actionButton(
-                      context,
-                      Icons.person,
-                      "Profile",
-                      () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BlocProvider<ProfileBloc>(
-                                create: (context) =>
-                                    ProfileBloc()..add(LoadUserProfile()),
-                                child: MyProfilePage(),
-                              ),
-                            ));
-                      },
-                    ),
-                  ],
-                ),
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider(
+                          create: (context) => BroadcastBLoC(),
+                          child: MyNotesPage(),
+                        ),
+                      ));
+                },
               ),
-
-              SizedBox(height: screenSize.height * 0.01),
+              actionButton(
+                context,
+                Icons.message,
+                "Chats",
+                () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => UsersListPage()));
+                },
+              ),
+              actionButton(
+                context,
+                Icons.person,
+                "Profile",
+                () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider<ProfileBloc>(
+                          create: (context) =>
+                              ProfileBloc()..add(LoadUserProfile()),
+                          child: MyProfilePage(),
+                        ),
+                      ));
+                },
+              ),
             ],
           ),
         ),
@@ -131,20 +127,22 @@ class MyLandingPage extends StatelessWidget {
 
   Widget actionButton(BuildContext context, IconData icon, String text,
       VoidCallback onPressed) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        elevation: 0,
-        backgroundColor: Colors.teal.shade300,
-        foregroundColor: Colors.black,
-        minimumSize: const Size(60, 60),
-      ),
-      onPressed: onPressed,
-      child: Row(
-        children: <Widget>[
-          Icon(icon),
-          const SizedBox(width: 8),
-          Text(text),
-        ],
+    return Expanded(
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.black, // Text Color
+          backgroundColor: Colors.teal.shade300, // Button background color
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Use minimum space
+          children: <Widget>[
+            Icon(icon),
+            Text(text,
+                style: TextStyle(
+                    fontSize: 11)), // Smaller text size for better fitting
+          ],
+        ),
       ),
     );
   }

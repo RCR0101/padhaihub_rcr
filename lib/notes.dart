@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -10,7 +12,7 @@ import 'package:padhaihub_v2/pdf_view.dart';
 import 'package:path_provider/path_provider.dart';
 import 'bloc/notes_bloc/notes_bloc.dart';
 import 'dart:io';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'bloc/notes_bloc/notes_event.dart';
 
 class MyNotesPage extends StatelessWidget {
@@ -101,17 +103,30 @@ class MyNotesPage extends StatelessWidget {
             itemCount: state.pdfMessages.length,
             itemBuilder: (context, index) {
               final fileMessage = state.pdfMessages[index];
-              return Card(
-                color: Colors.cyan.shade300,
-                borderOnForeground: false,
-                elevation: 2.0,
-                child: ListTile(
-                  title: Text(
-                    fileMessage.id,
-                    textAlign: TextAlign.center,
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.only(left: 5, right: 5),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black,
+                      radius: 20,
+                    ),
                   ),
-                  onTap: () => _handleMessageTap(context, fileMessage),
-                ),
+                  Expanded(
+                    child: Card(
+                      color: Colors.cyan.shade300,
+                      elevation: 2.0,
+                      child: ListTile(
+                        title: Text(
+                          fileMessage.id,
+                          textAlign: TextAlign.center,
+                        ),
+                        onTap: () => _handleMessageTap(context, fileMessage),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           );

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'notes_event.dart';
@@ -30,8 +31,8 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
         'uri': pdfUrl, // The URL to access the PDF in Firebase Storage
         'uploadedAt':
             FieldValue.serverTimestamp(), // Firestore server timestamp
-        // Add other metadata as needed, such as a title, description, etc.
         'id': fileName,
+        'uploader': FirebaseAuth.instance.currentUser?.uid
       });
 
       // Trigger fetching all PDFs including the newly uploaded one
