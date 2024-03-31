@@ -82,8 +82,7 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
       // Create a FileMessage for each PDF. Provide default values or handle nulls as necessary.
       if (pdfUrl != null) {
         final fileMessage = types.FileMessage(
-          author: types.User(
-              id: 'user_id'), // Adjust as necessary. You might not need this for a public broadcast.
+          author: types.User(id: FirebaseAuth.instance.currentUser!.uid),
           createdAt:
               (data['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ??
                   DateTime.now().millisecondsSinceEpoch,

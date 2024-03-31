@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -103,30 +104,16 @@ class MyNotesPage extends StatelessWidget {
             itemCount: state.pdfMessages.length,
             itemBuilder: (context, index) {
               final fileMessage = state.pdfMessages[index];
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(left: 5, right: 5),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.black,
-                      radius: 20,
-                    ),
-                  ),
-                  Expanded(
-                    child: Card(
-                      color: Colors.cyan.shade300,
-                      elevation: 2.0,
-                      child: ListTile(
-                        title: Text(
-                          fileMessage.id,
-                          textAlign: TextAlign.center,
-                        ),
-                        onTap: () => _handleMessageTap(context, fileMessage),
-                      ),
-                    ),
-                  ),
-                ],
+              return FutureBuilder<String>(
+                future: getUserProfileImageUrl(fileMessage
+                    .author.id), // Assuming this method is implemented
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done &&
+                      snapshot.hasData) {
+                    return _buildListItem(context, fileMessage, snapshot.data!);
+                  }
+                  return CircularProgressIndicator(); // Show loading animation or default image while fetching
+                },
               );
             },
           );
@@ -134,6 +121,35 @@ class MyNotesPage extends StatelessWidget {
           return Center(child: Text("No PDFs or Error Occurred"));
         }
       },
+    );
+  }
+
+  Widget _buildListItem(
+      BuildContext context, types.FileMessage fileMessage, String imageUrl) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Padding(
+          padding: EdgeInsets.only(left: 5, right: 5),
+          child: CircleAvatar(
+            backgroundImage: NetworkImage(imageUrl),
+            radius: 20,
+          ),
+        ),
+        Expanded(
+          child: Card(
+            color: Colors.cyan.shade300,
+            elevation: 2.0,
+            child: ListTile(
+              title: Text(
+                fileMessage.id,
+                textAlign: TextAlign.center,
+              ),
+              onTap: () => _handleMessageTap(context, fileMessage),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -157,5 +173,13 @@ class MyNotesPage extends StatelessWidget {
     // ignore: unused_local_variable
     final response = await Dio().download(url, filePath);
     return filePath; // Path of the downloaded file
+  }
+
+  Future<String> getUserProfileImageUrl(String uploaderId) async {
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uploaderId)
+        .get();
+    return docSnapshot.data()?['imageUrl'] ?? '';
   }
 }
