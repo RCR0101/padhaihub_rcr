@@ -77,20 +77,18 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
     for (var doc in querySnapshot.docs) {
       var data = doc.data();
       String? pdfUrl = data['uri'] as String?;
-      // Assuming 'name' and 'createdAt' are fields in your document. Adjust as necessary.
       String? name = data['name'] as String?;
-      // Create a FileMessage for each PDF. Provide default values or handle nulls as necessary.
+      String id = data['uploader'] as String;
       if (pdfUrl != null) {
         final fileMessage = types.FileMessage(
-          author: types.User(id: FirebaseAuth.instance.currentUser!.uid),
+          author: types.User(id: id),
           createdAt:
               (data['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ??
                   DateTime.now().millisecondsSinceEpoch,
-          id: doc.id, // Using document ID as message ID
+          id: doc.id,
           mimeType: 'application/pdf',
           name: name ?? 'PDF Document',
-          size: data['size'] as int? ??
-              0, // Provide a default size or fetch from data
+          size: data['size'] as int? ?? 0,
           uri: pdfUrl,
         );
         pdfMessages.add(fileMessage);

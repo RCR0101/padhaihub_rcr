@@ -23,6 +23,9 @@ class MyHomePage extends StatelessWidget {
       body: SafeArea(
         // Wrap with SingleChildScrollView to prevent overflow
         child: SingleChildScrollView(
+          physics: ScrollPhysics(
+              parent: BouncingScrollPhysics(
+                  decelerationRate: ScrollDecelerationRate.normal)),
           child: Center(
             child: Padding(
               // Adjust padding based on screen size
@@ -46,7 +49,7 @@ class MyHomePage extends StatelessWidget {
                                 screenSize.width * 0.1), // Responsive font size
                       )),
                   SizedBox(
-                      height: screenSize.height * 0.05), // Responsive height
+                      height: screenSize.height * 0.1), // Responsive height
                   Text(
                       'Welcome to PadhaiHub, a platform which gives you the freedom to share notes with anybody in BITS Pilani Hyderabad Campus!',
                       textAlign: TextAlign.center,
@@ -90,23 +93,36 @@ class MyHomePage extends StatelessWidget {
                   if (state is SignInLoadingState) {
                     return const CircularProgressIndicator();
                   }
-                  return SizedBox(
-                    width: screenSize.width * 0.34,
-                    height: screenSize.height * 0.05,
+                  return Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 8), // Add some horizontal padding
                     child: ElevatedButton.icon(
                       onPressed: () {
                         BlocProvider.of<SignInBloc>(context)
                             .add(SignInWithGooglePressed());
                       },
-                      icon: const Icon(Icons.person, color: Colors.black),
-                      label: Text(
-                        'Login',
-                        style: GoogleFonts.anta(
-                          textStyle: TextStyle(
-                              color: Colors.black,
-                              letterSpacing: .5,
-                              fontSize: MediaQuery.of(context).size.width *
-                                  0.05), // Consider making font size responsive if needed
+                      icon: Icon(Icons.person, color: Colors.black),
+                      label: Flexible(
+                        // Wrap the Text widget with Flexible
+                        child: Text(
+                          'Login',
+                          overflow: TextOverflow
+                              .ellipsis, // Use ellipsis for text overflow
+                          style: GoogleFonts.anta(
+                            textStyle: TextStyle(
+                                color: Colors.black,
+                                letterSpacing: .5,
+                                fontSize: MediaQuery.of(context).size.width *
+                                    0.05), // Consider making font size responsive if needed
+                          ),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6), // Adjust padding
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(20), // Rounded corners
                         ),
                       ),
                     ),

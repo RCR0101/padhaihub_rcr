@@ -72,6 +72,7 @@ class MyLandingPage extends StatelessWidget {
           ),
         ),
         bottomNavigationBar: BottomAppBar(
+          height: screenSize.height * 0.115,
           color: Colors.transparent,
           elevation: 0,
           child: Row(
@@ -137,10 +138,12 @@ class MyLandingPage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min, // Use minimum space
           children: <Widget>[
-            Icon(icon),
+            Icon(
+              icon,
+            ),
             Text(text,
                 style: TextStyle(
-                    fontSize: 11)), // Smaller text size for better fitting
+                    fontSize: 13)), // Smaller text size for better fitting
           ],
         ),
       ),
