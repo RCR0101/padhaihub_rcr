@@ -70,7 +70,9 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
   }
 
   Future<List<types.FileMessage>> fetchAllPdfMessages() async {
-    final collectionRef = FirebaseFirestore.instance.collection('pdfDocuments');
+    final collectionRef = FirebaseFirestore.instance
+        .collection('pdfDocuments')
+        .orderBy('uploadedAt', descending: true);
     List<types.FileMessage> pdfMessages = [];
     final querySnapshot = await collectionRef.get();
 

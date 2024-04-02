@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:padhaihub_v2/bloc/overview_bloc/overview_bloc.dart';
 import 'overview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import "bloc/sign_in_bloc/sign_in_bloc.dart";
@@ -79,12 +80,14 @@ class MyHomePage extends StatelessWidget {
                     Fluttertoast.showToast(
                         gravity: ToastGravity.CENTER,
                         msg: "Login Successful"); // Optional: Notify user
-                    Navigator.pushReplacement(
+                    Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const MyLandingPage(
-                                  title: 'PadhaiHub',
-                                )));
+                          builder: (context) => BlocProvider(
+                            create: (context) => OverviewBloc(),
+                            child: MyLandingPage(title: 'PadhaiHub'),
+                          ),
+                        ));
                   } else if (state is SignInFailureState) {
                     Fluttertoast.showToast(msg: "Login Failed: ${state.error}");
                   }

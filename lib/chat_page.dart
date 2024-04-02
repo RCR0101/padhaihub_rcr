@@ -68,20 +68,20 @@ class _ChatPageState extends State<ChatPage> {
           uri: fileUrl,
         );
         _chatBloc.add(SendFileMessageEvent(message, widget.chatId, file));
+        List<String> userIds = widget.chatId.split('_');
+        String recipientId =
+            userIds.firstWhere((id) => id == widget.userId, orElse: () => '');
+
+        if (recipientId.isNotEmpty) {
+          context
+              .read<ChatBloc>()
+              .add(IncrementUnreadMessages(widget.chatId, recipientId));
+        }
       } catch (e) {
         Fluttertoast.showToast(msg: "$e", gravity: ToastGravity.CENTER);
       }
     } else {
       Fluttertoast.showToast(msg: "No File Selected");
-    }
-    List<String> userIds = widget.chatId.split('_');
-    String recipientId =
-        userIds.firstWhere((id) => id == widget.userId, orElse: () => '');
-
-    if (recipientId.isNotEmpty) {
-      context
-          .read<ChatBloc>()
-          .add(IncrementUnreadMessages(widget.chatId, recipientId));
     }
   }
 

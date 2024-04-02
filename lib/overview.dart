@@ -6,6 +6,8 @@ import 'package:padhaihub_v2/chat_list.dart';
 import 'package:padhaihub_v2/notes.dart';
 import 'package:padhaihub_v2/profile_page.dart';
 
+import 'bloc/overview_bloc/overview_bloc.dart';
+import 'bloc/overview_bloc/overview_state.dart';
 import 'bloc/profile_bloc/profile_bloc.dart';
 import 'bloc/profile_bloc/profile_event.dart';
 
@@ -26,51 +28,28 @@ class MyLandingPage extends StatelessWidget {
             Colors.teal.shade300, // Background color for the entire page
         body: SafeArea(
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween, // Space out the boxes
             children: <Widget>[
-              SizedBox(
-                  height: screenSize.height *
-                      0.01), // Adjusted size using screen height
-              Text(
-                'PADHAIHUB',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.abel(
+              Padding(
+                padding: EdgeInsets.symmetric(
+                    vertical: 8.0), // Adjust the padding as needed
+                child: Text(
+                  'PADHAIHUB',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.abel(
                     textStyle: TextStyle(
-                        color: Colors.white,
-                        fontSize: screenSize.width *
-                            0.08, // Adjusted size using screen width
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: screenSize.width *
-                            0.03)), // Adjusted letter spacing
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  // Use SingleChildScrollView to prevent overflow
-                  padding: EdgeInsets.fromLTRB(0, 20.0, 0, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      SizedBox(height: screenSize.height * 0.02),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: screenSize.width *
-                                0.05), // Adjusted padding using screen width
-                        child: Text("While you were away...",
-                            textAlign: TextAlign.left,
-                            style: GoogleFonts.signikaNegative(
-                                textStyle: TextStyle(
-                              color: Colors.white,
-                              fontSize: screenSize.width * 0.085,
-                            ))), // Adjusted size using screen width
-                      ),
-                    ],
+                      color: Colors.white,
+                      fontSize: screenSize.width * 0.08,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: screenSize.width * 0.03,
+                    ),
                   ),
                 ),
               ),
+              OverviewSection(),
             ],
           ),
         ),
+
         bottomNavigationBar: BottomAppBar(
           height: screenSize.height * 0.115,
           color: Colors.transparent,
@@ -146,6 +125,74 @@ class MyLandingPage extends StatelessWidget {
                     fontSize: 13)), // Smaller text size for better fitting
           ],
         ),
+      ),
+    );
+  }
+}
+
+class OverviewSection extends StatelessWidget {
+  const OverviewSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Use MediaQuery to avoid direct screenSize dependency
+    final double padding = MediaQuery.of(context).size.width * 0.05;
+
+    return Expanded(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(height: 20), // Use fixed size for consistency
+            _buildTitle(padding),
+            _buildOverviewBlocBuilder(padding),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Padding _buildTitle(double padding) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: padding),
+      child: Text(
+        "While you were away...",
+        textAlign: TextAlign.left,
+        style: GoogleFonts.signikaNegative(
+          textStyle: TextStyle(
+            color: Colors.white,
+            fontSize: padding * 1.75, // Consider using a responsive size
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverviewBlocBuilder(double padding) {
+    return BlocBuilder<OverviewBloc, OverviewState>(
+      builder: (context, state) {
+        if (state is OverviewLoading) {
+          return Center(child: CircularProgressIndicator());
+        } else if (state is OverviewLoaded) {
+          return _buildOverviewContent(state.unreadCount);
+        } else if (state is OverviewError) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: padding),
+            child: Text("Error: ${state.message}"),
+          );
+        } else {
+          return SizedBox
+              .shrink(); // For OverviewInitial or any other unhandled state
+        }
+      },
+    );
+  }
+
+  Card _buildOverviewContent(int unreadCount) {
+    return Card(
+      child: ListTile(
+        title: Text("Unread Messages"),
+        subtitle: Text("$unreadCount unread messages"),
       ),
     );
   }
