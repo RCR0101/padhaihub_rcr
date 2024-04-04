@@ -23,14 +23,12 @@ class MyHomePage extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       backgroundColor: Colors.black,
       body: SafeArea(
-        // Wrap with SingleChildScrollView to prevent overflow
         child: SingleChildScrollView(
           physics: ScrollPhysics(
               parent: BouncingScrollPhysics(
                   decelerationRate: ScrollDecelerationRate.normal)),
           child: Center(
             child: Padding(
-              // Adjust padding based on screen size
               padding: EdgeInsets.all(screenSize.width * 0.05),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

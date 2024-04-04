@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:padhaihub_v2/bloc/profile_bloc/profile_event.dart';
+import 'package:padhaihub_v2/home.dart';
 
 import 'bloc/profile_bloc/profile_bloc.dart';
 import 'bloc/profile_bloc/profile_state.dart';
@@ -240,6 +242,18 @@ class _MyProfilePageState extends State<MyProfilePage> {
                           },
                         ),
                       ),
+                      SizedBox(height: screenSize.height * 0.02),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: screenSize.width * 0.05),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Call the logout method when the button is pressed
+                            _logout(context);
+                          },
+                          child: Text('Logout'),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -271,6 +285,20 @@ class _MyProfilePageState extends State<MyProfilePage> {
           const SizedBox(width: 8),
           Text(text),
         ],
+      ),
+    );
+  }
+
+  void _logout(BuildContext context) {
+    // Perform logout operations here, such as clearing user data, etc.
+    // For example, if using Firebase Authentication:
+    FirebaseAuth.instance.signOut();
+
+    // Navigate back to the login page or any other desired destination
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MyHomePage(title: 'PadhaiHub'),
       ),
     );
   }

@@ -1,37 +1,61 @@
 // ignore_for_file: unused_import
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:padhaihub_v2/bloc/sign_in_bloc/sign_in_bloc.dart';
+import 'package:padhaihub_v2/overview.dart';
 import 'bloc/chat_bloc/chat_bloc.dart';
+import 'bloc/overview_bloc/overview_bloc.dart';
+import 'bloc/overview_bloc/overview_event.dart';
 import 'home.dart'; // Import the home page
 
 void main() async {
+  // Initialize Firebase (if you haven't already)
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(
-    BlocProvider<ChatBloc>(
-      create: (context) =>
-          ChatBloc(DatabaseRepository()), // Create your ChatBloc
-      child: MyApp(),
-    ),
-  );
+
+  runApp(App());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'PadhaiHub',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade400),
-        useMaterial3: true,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ChatBloc>(
+          create: (context) => ChatBloc(DatabaseRepository()),
+        ),
+        BlocProvider<SignInBloc>(
+          create: (context) => SignInBloc(),
+        ),
+        BlocProvider<OverviewBloc>(
+          create: (context) => OverviewBloc()..add(LoadUnreadCount()),
+          child: MyLandingPage(title: 'PadhaiHub'),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'PadhaiHub',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade400),
+          useMaterial3: true,
+        ),
+        home: AuthenticationWrapper(),
       ),
-      home: const MyHomePage(title: 'PadhaiHub'),
     );
+  }
+}
+
+class AuthenticationWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    return currentUser != null
+        ? MyLandingPage(title: 'PadhaiHub')
+        : MyHomePage(title: 'PadhaiHub');
   }
 }
