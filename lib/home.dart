@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:padhaihub_v2/bloc/overview_bloc/overview_bloc.dart';
+import 'bloc/overview_bloc/overview_event.dart';
 import 'overview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import "bloc/sign_in_bloc/sign_in_bloc.dart";
@@ -84,7 +85,8 @@ class MyHomePage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => BlocProvider(
-                            create: (context) => OverviewBloc(),
+                            create: (context) =>
+                                OverviewBloc()..add(LoadUnreadCount()),
                             child: MyLandingPage(title: 'PadhaiHub'),
                           ),
                         ));

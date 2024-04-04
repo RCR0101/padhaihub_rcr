@@ -1,7 +1,8 @@
 // overview_bloc.dart
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'overview_event.dart';
 import 'overview_state.dart';
 
@@ -18,21 +19,29 @@ class OverviewBloc extends Bloc<OverviewEvent, OverviewState> {
       int totalUnreadCount = 0;
 
       if (userId != null) {
-        // Fetch user's chat IDs
-        final chatRefs = await FirebaseFirestore.instance
-            .collection('chats')
-            .where('members', arrayContains: userId)
-            .get();
+        final chatRefs =
+            await FirebaseFirestore.instance.collection('chats').get();
 
-        for (var doc in chatRefs.docs) {
-          String chatId = doc.id;
-          int unreadCount = await fetchUnreadCount(chatId, userId);
-          totalUnreadCount += unreadCount;
+        for (var chatDoc in chatRefs.docs) {
+          final chatId = chatDoc.id;
+          final unreadsSnapshot = await FirebaseFirestore.instance
+              .collection('chats')
+              .doc(chatId)
+              .collection('unreads')
+              .doc(userId)
+              .get();
+
+          final unreadCount = unreadsSnapshot.exists
+              ? (unreadsSnapshot['unreadCount'] ?? 0)
+              : 0; // If unreadsSnapshot doesn't exist, unreadCount is 0
+          totalUnreadCount += unreadCount as int;
         }
       }
 
       emit(OverviewLoaded(totalUnreadCount));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      Fluttertoast.showToast(msg: "Error loading unread count: $e");
+      Fluttertoast.showToast(msg: "Stack trace: $stackTrace");
       emit(OverviewError("Failed to load unread messages."));
     }
   }
@@ -45,7 +54,8 @@ class OverviewBloc extends Bloc<OverviewEvent, OverviewState> {
         .doc(userId);
 
     try {
-      DocumentSnapshot snapshot = await unreadCountRef.get();
+      DocumentSnapshot snapshot =
+          await unreadCountRef.get(GetOptions(source: Source.server));
       int unreadCount = snapshot.get('unreadCount');
       return unreadCount;
     } on StateError {

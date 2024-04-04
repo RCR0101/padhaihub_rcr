@@ -15,11 +15,19 @@ class DatabaseRepository {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   Future<void> storeMessage(String chatId, types.TextMessage message) async {
+    final createdAt = FieldValue.serverTimestamp(); // Get server timestamp
+
+    // Add the message to the messages collection
     await firestore.collection('chats').doc(chatId).collection('messages').add({
       'authorId': message.author.id,
       'text': message.text,
-      'timestamp': FieldValue.serverTimestamp(),
+      'timestamp': createdAt,
     });
+
+    // Update the createdAt field of the chat document
+    await firestore.collection('chats').doc(chatId).set({
+      'createdAt': createdAt,
+    }, SetOptions(merge: true)); // Merge the createdAt field with existing data
   }
 
   Future<void> incrementUnreadMessages(String chatId, String userId) async {
