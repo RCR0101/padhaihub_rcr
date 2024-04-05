@@ -36,6 +36,7 @@ class App extends StatelessWidget {
         BlocProvider<BroadcastBLoC>(
           create: (context) =>
               BroadcastBLoC()..add(CalculateUnreadNotesEvent()),
+          child: MyLandingPage(title: 'PadhaiHub'),
         ),
         BlocProvider<OverviewBloc>(
           create: (context) => OverviewBloc()..add(LoadUnreadCount()),

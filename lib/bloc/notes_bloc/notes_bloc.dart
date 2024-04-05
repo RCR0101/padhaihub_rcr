@@ -116,13 +116,13 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser?.uid)
         .get();
-    final lastVisited = userDoc.data()?['lastVisited'] as Timestamp?;
+    final lastVisited = userDoc.data()?['lastVisitedNotes'] as Timestamp?;
 
     int newNotesCount = 0;
     if (lastVisited != null) {
       final notesQuery = FirebaseFirestore.instance
           .collection('pdfDocuments')
-          .where('createdAt', isGreaterThan: lastVisited.toDate());
+          .where('uploadedAt', isGreaterThan: lastVisited.toDate());
       final newNotesSnapshot = await notesQuery.get();
       newNotesCount = newNotesSnapshot.docs.length;
     }
