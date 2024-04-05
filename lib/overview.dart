@@ -227,22 +227,21 @@ class OverviewSection extends StatelessWidget {
                 ),
               ),
             ),
-            if (unreadCount == 0)
-              Positioned(
-                top: 0,
-                right: sidePadding,
-                bottom: 0,
-                child: Center(
-                  child: Text(
-                    "$unreadCount",
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                    ),
+            Positioned(
+              top: 0,
+              right: sidePadding,
+              bottom: 0,
+              child: Center(
+                child: Text(
+                  "$unreadCount",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),

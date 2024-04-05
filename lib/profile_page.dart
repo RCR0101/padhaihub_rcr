@@ -224,8 +224,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                       SizedBox(height: screenSize.height * 0.015),
                       Padding(
                         padding: EdgeInsets.symmetric(
-                            horizontal: screenSize.width *
-                                0.05), // Adjusted padding using screen width
+                            horizontal: screenSize.width * 0.05),
                         child: BlocBuilder<ProfileBloc, ProfileState>(
                           builder: (context, state) {
                             if (state is ProfileLoaded) {
@@ -290,8 +289,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   void _logout(BuildContext context) {
-    // Perform logout operations here, such as clearing user data, etc.
-    // For example, if using Firebase Authentication:
     FirebaseAuth.instance.signOut();
 
     // Navigate back to the login page or any other desired destination
