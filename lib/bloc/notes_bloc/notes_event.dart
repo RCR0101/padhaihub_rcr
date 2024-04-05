@@ -8,3 +8,7 @@ class UploadPdfEvent extends BroadcastEvent {
 }
 
 class FetchPdfsEvent extends BroadcastEvent {}
+
+class UserVisitedNotesPage extends BroadcastEvent {}
+
+class CalculateUnreadNotesEvent extends BroadcastEvent {}

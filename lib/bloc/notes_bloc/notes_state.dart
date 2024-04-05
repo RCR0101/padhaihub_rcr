@@ -16,3 +16,9 @@ class BroadcastError extends BroadcastState {
   final String message;
   BroadcastError(this.message);
 }
+
+class NewNotesCountUpdated extends BroadcastState {
+  final int newNotesCount;
+
+  NewNotesCountUpdated(this.newNotesCount);
+}

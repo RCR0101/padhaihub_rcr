@@ -13,7 +13,6 @@ import 'package:padhaihub_v2/pdf_view.dart';
 import 'package:path_provider/path_provider.dart';
 import 'bloc/notes_bloc/notes_bloc.dart';
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'bloc/notes_bloc/notes_event.dart';
 
 class MyNotesPage extends StatelessWidget {
@@ -32,7 +31,10 @@ class MyNotesPage extends StatelessWidget {
         appBar: AppBar(
           centerTitle: true,
           leading: IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              context.read<BroadcastBLoC>().add(UserVisitedNotesPage());
+              Navigator.pop(context);
+            },
             icon: const Icon(Icons.arrow_back),
           ),
           title: Text(

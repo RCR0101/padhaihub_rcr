@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,7 +8,8 @@ import 'package:padhaihub_v2/bloc/notes_bloc/notes_bloc.dart';
 import 'package:padhaihub_v2/chat_list.dart';
 import 'package:padhaihub_v2/notes.dart';
 import 'package:padhaihub_v2/profile_page.dart';
-
+import 'bloc/notes_bloc/notes_event.dart';
+import 'bloc/notes_bloc/notes_state.dart';
 import 'bloc/overview_bloc/overview_bloc.dart';
 import 'bloc/overview_bloc/overview_state.dart';
 import 'bloc/profile_bloc/profile_bloc.dart';
@@ -19,7 +22,6 @@ class MyLandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use MediaQuery to get screen size
     final Size screenSize = MediaQuery.of(context).size;
     // ignore: deprecated_member_use
     return WillPopScope(
@@ -152,7 +154,9 @@ class OverviewSection extends StatelessWidget {
           children: [
             SizedBox(height: 20), // Use fixed size for consistency
             _buildTitle(sidePadding),
-            _buildOverviewBlocBuilder(sidePadding, upPadding),
+            SizedBox(height: upPadding * 0.5),
+            _buildOverviewMessages(sidePadding, upPadding),
+            _buildOverviewNotes(sidePadding, upPadding),
           ],
         ),
       ),
@@ -175,7 +179,7 @@ class OverviewSection extends StatelessWidget {
     );
   }
 
-  Widget _buildOverviewBlocBuilder(double sidePadding, double upPadding) {
+  Widget _buildOverviewMessages(double sidePadding, double upPadding) {
     return BlocBuilder<OverviewBloc, OverviewState>(
       builder: (context, state) {
         if (state is OverviewLoading) {
@@ -189,10 +193,65 @@ class OverviewSection extends StatelessWidget {
             child: Text("Error: ${state.message}"),
           );
         } else {
-          return SizedBox
-              .shrink(); // For OverviewInitial or any other unhandled state
+          return SizedBox.shrink();
         }
       },
+    );
+  }
+
+  Widget _buildOverviewNotes(double sidePadding, double upPadding) {
+    return BlocBuilder<BroadcastBLoC, BroadcastState>(
+      builder: (context, state) {
+        if (state is NewNotesCountUpdated) {
+          return _buildNotesContent(
+              state.newNotesCount, sidePadding, upPadding);
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+  }
+
+  Card _buildNotesContent(
+      int newNotesCount, double sidePadding, double upPadding) {
+    return Card(
+      elevation: 4,
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding:
+            EdgeInsets.symmetric(horizontal: sidePadding, vertical: upPadding),
+        child: Stack(
+          alignment: Alignment.centerRight,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading:
+                  Icon(Icons.note_add_outlined, size: 32, color: Colors.green),
+              title: Text(
+                "New Notes",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              right: sidePadding,
+              bottom: 0,
+              child: Center(
+                child: Text(
+                  "$newNotesCount",
+                  style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

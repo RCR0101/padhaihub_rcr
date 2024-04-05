@@ -5,6 +5,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:padhaihub_v2/bloc/notes_bloc/notes_bloc.dart';
+import 'package:padhaihub_v2/bloc/notes_bloc/notes_event.dart';
 import 'package:padhaihub_v2/bloc/sign_in_bloc/sign_in_bloc.dart';
 import 'package:padhaihub_v2/overview.dart';
 import 'bloc/chat_bloc/chat_bloc.dart';
@@ -30,6 +32,10 @@ class App extends StatelessWidget {
         ),
         BlocProvider<SignInBloc>(
           create: (context) => SignInBloc(),
+        ),
+        BlocProvider<BroadcastBLoC>(
+          create: (context) =>
+              BroadcastBLoC()..add(CalculateUnreadNotesEvent()),
         ),
         BlocProvider<OverviewBloc>(
           create: (context) => OverviewBloc()..add(LoadUnreadCount()),

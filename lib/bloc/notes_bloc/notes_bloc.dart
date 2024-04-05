@@ -12,6 +12,8 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
   BroadcastBLoC() : super(BroadcastInitial()) {
     on<UploadPdfEvent>(_onUploadPdfEvent);
     on<FetchPdfsEvent>(_onFetchPdfsEvent);
+    on<UserVisitedNotesPage>(_updateUserLastVisit);
+    on<CalculateUnreadNotesEvent>(_handleCalculateUnreadNotes);
   }
 
   Future<void> _onUploadPdfEvent(
@@ -98,5 +100,34 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
     }
 
     return pdfMessages;
+  }
+
+  Future<void> _updateUserLastVisit(
+      UserVisitedNotesPage event, Emitter<BroadcastState> emit) async {
+    final userDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser?.uid);
+    await userDoc.update({'lastVisitedNotes': FieldValue.serverTimestamp()});
+  }
+
+  Future<void> _handleCalculateUnreadNotes(
+      CalculateUnreadNotesEvent event, Emitter<BroadcastState> emit) async {
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .get();
+    final lastVisited = userDoc.data()?['lastVisited'] as Timestamp?;
+
+    int newNotesCount = 0;
+    if (lastVisited != null) {
+      final notesQuery = FirebaseFirestore.instance
+          .collection('pdfDocuments')
+          .where('createdAt', isGreaterThan: lastVisited.toDate());
+      final newNotesSnapshot = await notesQuery.get();
+      newNotesCount = newNotesSnapshot.docs.length;
+    }
+
+    // Emitting the new state with the count
+    emit(NewNotesCountUpdated(newNotesCount));
   }
 }
