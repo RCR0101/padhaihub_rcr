@@ -71,43 +71,23 @@ class MyLandingPage extends StatelessWidget {
                     context,
                     Icons.notes_rounded,
                     "Broadcast",
-                    () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BlocProvider(
-                              create: (context) => BroadcastBLoC(),
-                              child: MyNotesPage(),
-                            ),
-                          ));
-                    },
+                    MyNotesPage(), // Pass the page widget directly
                   ),
                   actionButton(
                     context,
                     Icons.message,
                     "Chats",
-                    () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => UsersListPage()));
-                    },
+                    UsersListPage(), // Pass the page widget directly
                   ),
                   actionButton(
                     context,
                     Icons.person,
                     "Profile",
-                    () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BlocProvider<ProfileBloc>(
-                              create: (context) =>
-                                  ProfileBloc()..add(LoadUserProfile()),
-                              child: MyProfilePage(),
-                            ),
-                          ));
-                    },
+                    BlocProvider<ProfileBloc>(
+                      create: (context) =>
+                          ProfileBloc()..add(LoadUserProfile()),
+                      child: MyProfilePage(),
+                    ),
                   ),
                 ],
               ),
@@ -116,11 +96,13 @@ class MyLandingPage extends StatelessWidget {
         ));
   }
 
-  Widget actionButton(BuildContext context, IconData icon, String text,
-      VoidCallback onPressed) {
+  Widget actionButton(
+      BuildContext context, IconData icon, String text, Widget page) {
     return Expanded(
       child: TextButton(
-        onPressed: onPressed,
+        onPressed: () {
+          Navigator.of(context).push(createRoute(page));
+        },
         style: TextButton.styleFrom(
           foregroundColor: Colors.black, // Text Color
           backgroundColor: Colors.teal.shade300, // Button background color
@@ -128,15 +110,30 @@ class MyLandingPage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min, // Use minimum space
           children: <Widget>[
-            Icon(
-              icon,
-            ),
+            Icon(icon),
             Text(text,
                 style: TextStyle(
                     fontSize: 13)), // Smaller text size for better fitting
           ],
         ),
       ),
+    );
+  }
+
+  Route createRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0); // Starts from the right
+        const end = Offset.zero;
+        const curve = Curves.ease;
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(position: offsetAnimation, child: child);
+      },
     );
   }
 }

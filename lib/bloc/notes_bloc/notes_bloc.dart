@@ -108,6 +108,7 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser?.uid);
     await userDoc.update({'lastVisitedNotes': FieldValue.serverTimestamp()});
+    emit(NewNotesCountUpdated(0));
   }
 
   Future<void> _handleCalculateUnreadNotes(
