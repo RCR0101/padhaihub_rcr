@@ -5,7 +5,7 @@
     <application
         android:label="PadhaiHub"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
         android:usesCleartextTraffic="true"
             android:name=".MainActivity"
