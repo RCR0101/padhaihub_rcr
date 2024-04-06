@@ -11,6 +11,7 @@ import 'package:padhaihub_v2/profile_page.dart';
 import 'bloc/notes_bloc/notes_event.dart';
 import 'bloc/notes_bloc/notes_state.dart';
 import 'bloc/overview_bloc/overview_bloc.dart';
+import 'bloc/overview_bloc/overview_event.dart';
 import 'bloc/overview_bloc/overview_state.dart';
 import 'bloc/profile_bloc/profile_bloc.dart';
 import 'bloc/profile_bloc/profile_event.dart';
@@ -148,16 +149,20 @@ class OverviewSection extends StatelessWidget {
     final double sidePadding = MediaQuery.of(context).size.width * 0.05;
     final double upPadding = MediaQuery.of(context).size.height * 0.05;
     return Expanded(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: 20), // Use fixed size for consistency
-            _buildTitle(sidePadding),
-            SizedBox(height: upPadding * 0.5),
-            _buildOverviewMessages(sidePadding, upPadding),
-            _buildOverviewNotes(sidePadding, upPadding),
-          ],
+      child: RefreshIndicator(
+        onRefresh: () => _refreshContent(context),
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 20), // Use fixed size for consistency
+              _buildTitle(sidePadding),
+              SizedBox(height: upPadding * 0.5),
+              _buildOverviewMessages(sidePadding, upPadding),
+              _buildOverviewNotes(sidePadding, upPadding),
+            ],
+          ),
         ),
       ),
     );
@@ -305,5 +310,10 @@ class OverviewSection extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _refreshContent(BuildContext context) async {
+    context.read<OverviewBloc>().add(LoadUnreadCount());
+    context.read<BroadcastBLoC>().add(CalculateUnreadNotesEvent());
   }
 }

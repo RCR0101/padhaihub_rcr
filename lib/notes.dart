@@ -102,22 +102,26 @@ class MyNotesPage extends StatelessWidget {
         if (state is BroadcastLoading) {
           return Center(child: CircularProgressIndicator());
         } else if (state is BroadcastPdfListUpdated) {
-          return ListView.builder(
-            itemCount: state.pdfMessages.length,
-            itemBuilder: (context, index) {
-              final fileMessage = state.pdfMessages[index];
-              return FutureBuilder<String>(
-                future: getUserProfileImageUrl(fileMessage
-                    .author.id), // Assuming this method is implemented
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done &&
-                      snapshot.hasData) {
-                    return _buildListItem(context, fileMessage, snapshot.data!);
-                  }
-                  return CircularProgressIndicator(); // Show loading animation or default image while fetching
-                },
-              );
-            },
+          return RefreshIndicator(
+            onRefresh: () => _refreshContent(context),
+            child: ListView.builder(
+              physics: AlwaysScrollableScrollPhysics(),
+              itemCount: state.pdfMessages.length,
+              itemBuilder: (context, index) {
+                final fileMessage = state.pdfMessages[index];
+                return FutureBuilder<String>(
+                  future: getUserProfileImageUrl(fileMessage.author.id),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done &&
+                        snapshot.hasData) {
+                      return _buildListItem(
+                          context, fileMessage, snapshot.data!);
+                    }
+                    return Center(child: CircularProgressIndicator());
+                  },
+                );
+              },
+            ),
           );
         } else {
           return Center(child: Text("No PDFs or Error Occurred"));
@@ -183,5 +187,9 @@ class MyNotesPage extends StatelessWidget {
         .doc(uploaderId)
         .get();
     return docSnapshot.data()?['imageUrl'] ?? '';
+  }
+
+  Future<void> _refreshContent(BuildContext context) async {
+    context.read<BroadcastBLoC>().add(FetchPdfsEvent());
   }
 }
