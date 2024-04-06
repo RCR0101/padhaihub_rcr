@@ -241,25 +241,44 @@ class _MyProfilePageState extends State<MyProfilePage> {
                           },
                         ),
                       ),
-                      SizedBox(height: screenSize.height * 0.02),
+                      SizedBox(height: screenSize.height * 0.06),
                       Padding(
                         padding: EdgeInsets.symmetric(
                             horizontal: screenSize.width * 0.05),
                         child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey.shade900,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                           onPressed: () {
-                            // Call the logout method when the button is pressed
                             _logout(context);
                           },
-                          child: Text('Logout'),
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.red, // Text color
+                              shadows: [
+                                BoxShadow(
+                                  color: Colors.redAccent
+                                      .withOpacity(0.7), // Neon glow color
+                                  blurRadius: 10.0, // Glow effect
+                                  spreadRadius: 2.0,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(
-                  height: screenSize.height *
-                      0.01), // Adjusted size using screen height
+              SizedBox(height: screenSize.height * 0.01),
             ],
           ),
         ),
@@ -276,8 +295,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
         foregroundColor: Colors.black,
         minimumSize: const Size(60, 60),
       ),
-      onPressed:
-          onPressed, // Use the onPressed parameter for the button's functionality
+      onPressed: onPressed,
       child: Row(
         children: <Widget>[
           Icon(icon),
@@ -290,8 +308,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   void _logout(BuildContext context) {
     FirebaseAuth.instance.signOut();
-
-    // Navigate back to the login page or any other desired destination
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

@@ -3,6 +3,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:padhaihub_v2/bloc/notes_bloc/notes_bloc.dart';
@@ -12,14 +13,16 @@ import 'package:padhaihub_v2/overview.dart';
 import 'bloc/chat_bloc/chat_bloc.dart';
 import 'bloc/overview_bloc/overview_bloc.dart';
 import 'bloc/overview_bloc/overview_event.dart';
-import 'home.dart'; // Import the home page
+import 'home.dart';
 
 void main() async {
   // Initialize Firebase (if you haven't already)
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
-  runApp(App());
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(App());
+  });
 }
 
 class App extends StatelessWidget {

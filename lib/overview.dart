@@ -141,8 +141,50 @@ class MyLandingPage extends StatelessWidget {
   }
 }
 
-class OverviewSection extends StatelessWidget {
+class OverviewSection extends StatefulWidget {
   const OverviewSection({super.key});
+
+  @override
+  State<OverviewSection> createState() => _OverviewSectionState();
+}
+
+class _OverviewSectionState extends State<OverviewSection>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _animation = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0.0, 1.0), // Start below the screen
+      end: Offset.zero, // End at its natural position
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+    // Start the animation
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(Duration(milliseconds: 1000));
+      _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +230,7 @@ class OverviewSection extends StatelessWidget {
     return BlocBuilder<OverviewBloc, OverviewState>(
       builder: (context, state) {
         if (state is OverviewLoading) {
-          return Center(child: CircularProgressIndicator());
+          return _buildOverviewContent(0, sidePadding, upPadding);
         } else if (state is OverviewLoaded) {
           return _buildOverviewContent(
               state.unreadCount, sidePadding, upPadding);
@@ -217,96 +259,108 @@ class OverviewSection extends StatelessWidget {
     );
   }
 
-  Card _buildNotesContent(
+  Widget _buildNotesContent(
       int newNotesCount, double sidePadding, double upPadding) {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding:
-            EdgeInsets.symmetric(horizontal: sidePadding, vertical: upPadding),
-        child: Stack(
-          alignment: Alignment.centerRight,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading:
-                  Icon(Icons.note_add_outlined, size: 32, color: Colors.green),
-              title: Text(
-                "New Notes",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-            ),
-            Positioned(
-              top: 0,
-              right: sidePadding,
-              bottom: 0,
-              child: Center(
-                child: Text(
-                  "$newNotesCount",
-                  style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold),
+    return FadeTransition(
+      opacity: _animation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Card(
+          elevation: 4,
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: sidePadding, vertical: upPadding),
+            child: Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.note_add_outlined,
+                      size: 32, color: Colors.green),
+                  title: Text(
+                    "New Notes",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                 ),
-              ),
+                Positioned(
+                  top: 0,
+                  right: sidePadding,
+                  bottom: 0,
+                  child: Center(
+                    child: Text(
+                      "$newNotesCount",
+                      style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Card _buildOverviewContent(
+  Widget _buildOverviewContent(
       int unreadCount, double sidePadding, double upPadding) {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: sidePadding,
-          vertical: upPadding,
-        ),
-        child: Stack(
-          alignment: Alignment.centerRight,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                Icons.mail_outline,
-                size: 32,
-                color: Colors.blue,
-              ),
-              title: Text(
-                "Unread Messages",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
+    return FadeTransition(
+      opacity: _animation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Card(
+          elevation: 4,
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: sidePadding,
+              vertical: upPadding,
             ),
-            Positioned(
-              top: 0,
-              right: sidePadding,
-              bottom: 0,
-              child: Center(
-                child: Text(
-                  "$unreadCount",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
+            child: Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.mail_outline,
+                    size: 32,
+                    color: Colors.blue,
+                  ),
+                  title: Text(
+                    "Unread Messages",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  top: 0,
+                  right: sidePadding,
+                  bottom: 0,
+                  child: Center(
+                    child: Text(
+                      "$unreadCount",
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
