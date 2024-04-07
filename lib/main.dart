@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+//import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:padhaihub_v2/bloc/notes_bloc/notes_bloc.dart';
 import 'package:padhaihub_v2/bloc/notes_bloc/notes_event.dart';
 import 'package:padhaihub_v2/bloc/sign_in_bloc/sign_in_bloc.dart';
@@ -16,9 +17,9 @@ import 'bloc/overview_bloc/overview_event.dart';
 import 'home.dart';
 
 void main() async {
-  // Initialize Firebase (if you haven't already)
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // initOneSignal();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
     runApp(App());
@@ -69,3 +70,9 @@ class AuthenticationWrapper extends StatelessWidget {
         : MyHomePage(title: 'PadhaiHub');
   }
 }
+
+// void initOneSignal() {
+//   OneSignal.initialize(
+//     "d18400c9-5690-4e47-a6a1-d8fa1ac45ce1",
+//   );
+// }

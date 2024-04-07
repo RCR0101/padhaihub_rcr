@@ -15,15 +15,28 @@ import 'bloc/notes_bloc/notes_bloc.dart';
 import 'dart:io';
 import 'bloc/notes_bloc/notes_event.dart';
 
-class MyNotesPage extends StatelessWidget {
+class MyNotesPage extends StatefulWidget {
   const MyNotesPage({super.key});
+
+  @override
+  State<MyNotesPage> createState() => _MyNotesPageState();
+}
+
+class _MyNotesPageState extends State<MyNotesPage> {
+  List<types.FileMessage> allPdfMessages = [];
+  List<types.FileMessage> filteredPdfMessages = [];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      BlocProvider.of<BroadcastBLoC>(context).add(FetchPdfsEvent());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BroadcastBLoC>().add(FetchPdfsEvent());
-    });
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
@@ -54,6 +67,33 @@ class MyNotesPage extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  maxLines: 1,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: "Search PDFs",
+                    fillColor: Colors.white,
+                    filled: true,
+                    prefixIcon: Icon(Icons.search),
+                    contentPadding: EdgeInsets.all(10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (searchText) {
+                    setState(() {
+                      filteredPdfMessages = allPdfMessages.where((pdfMessage) {
+                        return pdfMessage.id
+                            .toLowerCase()
+                            .contains(searchText.toLowerCase());
+                      }).toList();
+                    });
+                  },
+                ),
+              ),
               SizedBox(
                 height: screenSize.height * 0.01,
               ),
@@ -96,6 +136,11 @@ class MyNotesPage extends StatelessWidget {
         if (state is BroadcastError) {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text(state.message)));
+        } else if (state is BroadcastPdfListUpdated) {
+          setState(() {
+            allPdfMessages = state.pdfMessages;
+            filteredPdfMessages = List.from(state.pdfMessages);
+          });
         }
       },
       builder: (context, state) {
@@ -106,9 +151,9 @@ class MyNotesPage extends StatelessWidget {
             onRefresh: () => _refreshContent(context),
             child: ListView.builder(
               physics: AlwaysScrollableScrollPhysics(),
-              itemCount: state.pdfMessages.length,
+              itemCount: filteredPdfMessages.length,
               itemBuilder: (context, index) {
-                final fileMessage = state.pdfMessages[index];
+                final fileMessage = filteredPdfMessages[index];
                 return FutureBuilder<String>(
                   future: getUserProfileImageUrl(fileMessage.author.id),
                   builder: (context, snapshot) {

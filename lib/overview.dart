@@ -190,18 +190,30 @@ class _OverviewSectionState extends State<OverviewSection>
     return Expanded(
       child: RefreshIndicator(
         onRefresh: () => _refreshContent(context),
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: 20), // Use fixed size for consistency
-              _buildTitle(sidePadding),
-              SizedBox(height: upPadding * 0.5),
-              _buildOverviewMessages(sidePadding, upPadding),
-              _buildOverviewNotes(sidePadding, upPadding),
-            ],
-          ),
+        child: LayoutBuilder(
+          // Use LayoutBuilder to ensure SingleChildScrollView takes the full height
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: 20),
+                      _buildTitle(sidePadding),
+                      SizedBox(height: upPadding * 0.5),
+                      _buildOverviewMessages(sidePadding, upPadding),
+                      _buildOverviewNotes(sidePadding, upPadding),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -280,7 +292,10 @@ class _OverviewSectionState extends State<OverviewSection>
                       size: 32, color: Colors.green),
                   title: Text(
                     "New Notes",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize:
+                            MediaQuery.of(context).size.width > 360 ? 18 : 16),
                   ),
                 ),
                 Positioned(
@@ -336,7 +351,8 @@ class _OverviewSectionState extends State<OverviewSection>
                     "Unread Messages",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                      fontSize:
+                          MediaQuery.of(context).size.width > 360 ? 18 : 16,
                     ),
                   ),
                 ),

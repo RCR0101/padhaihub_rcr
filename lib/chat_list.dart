@@ -13,37 +13,56 @@ class UsersListPage extends StatefulWidget {
   _UsersListPageState createState() => _UsersListPageState();
 }
 
+class UserWithLastMessage {
+  final User_D user;
+  final Timestamp lastMessageTimestamp;
+
+  UserWithLastMessage({required this.user, required this.lastMessageTimestamp});
+}
+
 class _UsersListPageState extends State<UsersListPage> {
-  Future<List<User_D>> getUsersWithNonEmptyChats() async {
+  Future<List<UserWithLastMessage>> getUsersWithNonEmptyChats() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return [];
 
     QuerySnapshot userSnapshot =
         await FirebaseFirestore.instance.collection('users').get();
-    List<User_D> allUsers = userSnapshot.docs
-        .map((doc) => User_D(
+
+    List<UserWithLastMessage> usersWithLastMessage = [];
+
+    for (var doc in userSnapshot.docs) {
+      String chatId = determineChatId(currentUser.uid, doc.id);
+
+      // Fetch the most recent message for this chat
+      var messagesSnapshot = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      // If chat is not empty, add user and the timestamp of the last message
+      if (messagesSnapshot.docs.isNotEmpty) {
+        var lastMessageTimestamp =
+            messagesSnapshot.docs.first.data()['timestamp'] as Timestamp;
+        usersWithLastMessage.add(UserWithLastMessage(
+          user: User_D(
             id: doc.id,
             name: doc['name'],
             email: doc['email'],
-            imageUrl: doc['imageUrl']))
-        .toList();
-
-    // List to keep track of users with non-empty chats
-    List<User_D> usersWithNonEmptyChats = [];
-
-    // Check each user for non-empty chat
-    for (var user in allUsers) {
-      String chatId = determineChatId(currentUser.uid, user.id);
-      final chatRef =
-          FirebaseFirestore.instance.collection('chats').doc(chatId);
-      final snapshot = await chatRef.collection('messages').limit(1).get();
-
-      if (snapshot.docs.isNotEmpty) {
-        usersWithNonEmptyChats.add(user);
+            imageUrl: doc['imageUrl'],
+          ),
+          lastMessageTimestamp: lastMessageTimestamp,
+        ));
       }
     }
 
-    return usersWithNonEmptyChats;
+    // Sort the users based on the timestamp of the last message
+    usersWithLastMessage.sort(
+        (a, b) => b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp));
+
+    return usersWithLastMessage;
   }
 
   @override
@@ -81,7 +100,7 @@ class _UsersListPageState extends State<UsersListPage> {
           )
         ],
       ),
-      body: FutureBuilder<List<User_D>>(
+      body: FutureBuilder<List<UserWithLastMessage>>(
         future: getUsersWithNonEmptyChats(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -98,14 +117,14 @@ class _UsersListPageState extends State<UsersListPage> {
             itemBuilder: (context, index) {
               final user = users[index];
               String chatId = determineChatId(
-                  FirebaseAuth.instance.currentUser!.uid, user.id);
+                  FirebaseAuth.instance.currentUser!.uid, user.user.id);
               return ListTile(
                 leading: Stack(
                   clipBehavior: Clip
                       .none, // Allows the badge to go outside the Stack's bounds
                   children: [
                     CircleAvatar(
-                      backgroundImage: NetworkImage(user.imageUrl),
+                      backgroundImage: NetworkImage(user.user.imageUrl),
                       backgroundColor: Colors.transparent,
                     ),
                     Positioned(
@@ -141,14 +160,14 @@ class _UsersListPageState extends State<UsersListPage> {
                     ),
                   ],
                 ),
-                title: Text(toCapitalCase(user.name)),
+                title: Text(toCapitalCase(user.user.name)),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => BlocProvider<ChatBloc>(
                         create: (context) => ChatBloc(DatabaseRepository()),
-                        child: ChatPage(userId: user.id, chatId: chatId),
+                        child: ChatPage(userId: user.user.id, chatId: chatId),
                       ),
                     ),
                   );
