@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,6 +17,8 @@ import 'bloc/overview_bloc/overview_event.dart';
 import 'bloc/overview_bloc/overview_state.dart';
 import 'bloc/profile_bloc/profile_bloc.dart';
 import 'bloc/profile_bloc/profile_event.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyLandingPage extends StatelessWidget {
   final String title;
@@ -154,6 +158,8 @@ class _OverviewSectionState extends State<OverviewSection>
   @override
   void initState() {
     super.initState();
+    NotificationPermissionHandler.requestNotificationPermissionIfNeeded();
+    _handleTokenRefresh();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -383,4 +389,57 @@ class _OverviewSectionState extends State<OverviewSection>
     context.read<OverviewBloc>().add(LoadUnreadCount());
     context.read<BroadcastBLoC>().add(CalculateUnreadNotesEvent());
   }
+}
+
+class NotificationPermissionHandler {
+  static const _hasRequestedPermissionKey =
+      'hasRequestedNotificationPermission';
+
+  static Future<void> requestNotificationPermissionIfNeeded() async {
+    final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final hasRequestedPermission =
+        prefs.getBool(_hasRequestedPermissionKey) ?? false;
+
+    if (!hasRequestedPermission) {
+      // Requesting notification permission
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        print("User granted permission");
+        String? fcmToken = await _firebaseMessaging.getToken();
+        if (fcmToken != null) {
+          _saveTokenToDatabase(fcmToken);
+        }
+      } else {
+        print("User declined or has not accepted permission");
+      }
+
+      // Mark that the permission has been requested so it doesn't ask again
+      await prefs.setBool(_hasRequestedPermissionKey, true);
+    }
+  }
+}
+
+Future<void> _saveTokenToDatabase(String token) async {
+  String? userId = FirebaseAuth.instance.currentUser?.uid;
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .set({'fcmToken': token}, SetOptions(merge: true));
+}
+
+void _handleTokenRefresh() {
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+    _saveTokenToDatabase(newToken);
+  }).onError((err) {
+    // Handle any errors here
+  });
 }

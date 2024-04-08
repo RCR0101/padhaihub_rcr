@@ -43,3 +43,5 @@ app.*.map.json
 /android/app/release
 android/app/google-services.json
 client_secret_621820688017-kh3s5o147jfpqgp6pjurvece2vc1lgea.apps.googleusercontent.com.json
+padhaihub-firebase-adminsdk-btb0m-2dcdbf90da.json
+/node_modules

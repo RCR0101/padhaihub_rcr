@@ -7,8 +7,8 @@ abstract class ChatEvent {}
 class SendMessageEvent extends ChatEvent {
   types.TextMessage message;
   final String chatId;
-
-  SendMessageEvent(this.message, this.chatId);
+  final String recipientId;
+  SendMessageEvent(this.message, this.chatId, this.recipientId);
 }
 
 class LoadMessageEvent extends ChatEvent {
@@ -21,7 +21,8 @@ class SendFileMessageEvent extends ChatEvent {
   types.FileMessage message;
   final String chatId;
   final File file;
-  SendFileMessageEvent(this.message, this.chatId, this.file);
+  final String recipientId;
+  SendFileMessageEvent(this.message, this.chatId, this.file, this.recipientId);
 }
 
 class DeletePdfEvent extends ChatEvent {

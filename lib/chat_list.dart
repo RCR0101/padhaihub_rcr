@@ -6,7 +6,7 @@ import 'package:padhaihub_v2/new_chats.dart';
 import 'bloc/chat_bloc/chat_bloc.dart';
 import 'chat_page.dart';
 import 'user_data/user_model.dart';
-import 'package:google_fonts/google_fonts.dart'; // Assuming you have a User model class
+import 'package:google_fonts/google_fonts.dart';
 
 class UsersListPage extends StatefulWidget {
   @override
@@ -195,11 +195,9 @@ String toCapitalCase(String input) {
 }
 
 String determineChatId(String currentUserId, String otherUserId) {
-  // Ensure the order is always the same by sorting
   List<String> ids = [currentUserId, otherUserId];
   ids.sort();
 
-  // Concatenate the sorted user IDs to form the chat ID
   String chatId = ids.join('_');
   return chatId;
 }
@@ -220,7 +218,6 @@ Future<int> fetchUnreadCount(String chatId, String userId) async {
     return 0;
   } catch (e) {
     // Handle any other errors
-    print("Error fetching unread count: $e");
     return 0;
   }
 }

@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -38,7 +39,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _user = types.User(id: widget.userId);
+    _user = types.User(id: FirebaseAuth.instance.currentUser!.uid);
     _chatBloc = context.read<ChatBloc>();
     _chatBloc.add(LoadMessageEvent(widget.chatId));
   }
@@ -67,7 +68,8 @@ class _ChatPageState extends State<ChatPage> {
           size: result.files.single.size,
           uri: fileUrl,
         );
-        _chatBloc.add(SendFileMessageEvent(message, widget.chatId, file));
+        _chatBloc.add(
+            SendFileMessageEvent(message, widget.chatId, file, widget.userId));
         List<String> userIds = widget.chatId.split('_');
         String recipientId =
             userIds.firstWhere((id) => id == widget.userId, orElse: () => '');
@@ -153,7 +155,7 @@ class _ChatPageState extends State<ChatPage> {
       text: message.text,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
-    _chatBloc.add(SendMessageEvent(textMessage, widget.chatId));
+    _chatBloc.add(SendMessageEvent(textMessage, widget.chatId, widget.userId));
     List<String> userIds = widget.chatId.split('_');
     String recipientId =
         userIds.firstWhere((id) => id == widget.userId, orElse: () => '');
@@ -294,6 +296,6 @@ class _ChatPageState extends State<ChatPage> {
     final filePath = '${directory.path}/$fileName';
     // ignore: unused_local_variable
     final response = await Dio().download(url, filePath);
-    return filePath; // Path of the downloaded file
+    return filePath;
   }
 }

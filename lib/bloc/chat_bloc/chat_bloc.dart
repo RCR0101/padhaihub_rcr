@@ -14,20 +14,20 @@ import 'chat_state.dart';
 class DatabaseRepository {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Future<void> storeMessage(String chatId, types.TextMessage message) async {
-    final createdAt = FieldValue.serverTimestamp(); // Get server timestamp
+  Future<void> storeMessage(
+      String chatId, types.TextMessage message, String recipientId) async {
+    final createdAt = FieldValue.serverTimestamp();
 
-    // Add the message to the messages collection
     await firestore.collection('chats').doc(chatId).collection('messages').add({
-      'authorId': message.author.id,
+      'authorId': FirebaseAuth.instance.currentUser!.uid,
+      'authorName': FirebaseAuth.instance.currentUser!.displayName,
       'text': message.text,
       'timestamp': createdAt,
+      'recipientId': recipientId,
     });
-
-    // Update the createdAt field of the chat document
     await firestore.collection('chats').doc(chatId).set({
       'createdAt': createdAt,
-    }, SetOptions(merge: true)); // Merge the createdAt field with existing data
+    }, SetOptions(merge: true));
   }
 
   Future<void> incrementUnreadMessages(String chatId, String userId) async {
@@ -84,8 +84,8 @@ class DatabaseRepository {
     });
   }
 
-  Future<void> storeFileMessage(
-      String chatId, types.FileMessage message, File file) async {
+  Future<void> storeFileMessage(String chatId, types.FileMessage message,
+      File file, String recipientId) async {
     // Ensure the file is a PDF by checking its extension
     final String fileName = file.path.split('/').last;
     if (!fileName.toLowerCase().endsWith('.pdf')) {
@@ -109,14 +109,16 @@ class DatabaseRepository {
           .doc(chatId)
           .collection('messages')
           .add({
-        'authorId': message.author.id,
+        'authorId': FirebaseAuth.instance.currentUser!.uid,
+        'authorName': FirebaseAuth.instance.currentUser!.displayName,
         'timestamp': FieldValue.serverTimestamp(),
-        'type': 'pdf', // Marking the message type as 'pdf'
-        'filePath': filePath, // Storing the path for further reference
+        'type': 'pdf',
+        'filePath': filePath,
         'name': message.name,
         'size': message.size,
-        'uri': fileUrl, // The URL to access the file
-        'mimeType': 'application/pdf', // Setting MIME type as PDF
+        'uri': fileUrl,
+        'mimeType': 'application/pdf',
+        'recipientId': recipientId,
       });
     } catch (e) {
       throw Exception("Failed to store PDF file message: $e");
@@ -259,7 +261,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
   Future<void> _onSendMessageEvent(
       SendMessageEvent event, Emitter<ChatStateBloc> emit) async {
     try {
-      await databaseRepository.storeMessage(event.chatId, event.message);
+      await databaseRepository.storeMessage(
+          event.chatId, event.message, event.recipientId);
     } catch (e) {
       emit(ChatErrorState(e.toString()));
     }
@@ -282,10 +285,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
       SendFileMessageEvent event, Emitter<ChatStateBloc> emit) async {
     try {
       await databaseRepository.storeFileMessage(
-          event.chatId, event.message, event.file);
-
-      // Listen to the stream and emit updates.
-      // Note: Ensure you manage the subscription to avoid memory leaks.
+          event.chatId, event.message, event.file, event.recipientId);
       databaseRepository.getMessagesStream(event.chatId).listen(
         (updatedMessages) {
           emit(ChatMessagesUpdatedState(updatedMessages));
@@ -302,7 +302,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatStateBloc> {
   Future<void> _handleDeletePdfEvent(
       DeletePdfEvent event, Emitter<ChatStateBloc> emit) async {
     try {
-      //await FirebaseStorage.instance.ref(event.storagePath).delete(); fix this line, not deleting from storage, works fine otherwise
       await _deleteMessage(event.chatId, event.messageId);
       emit(DeletedPdfState());
     } catch (e) {
