@@ -89,7 +89,8 @@ class DatabaseRepository {
     // Ensure the file is a PDF by checking its extension
     final String fileName = file.path.split('/').last;
     if (!fileName.toLowerCase().endsWith('.pdf')) {
-      throw Exception("Only PDF files are supported.");
+      Fluttertoast.showToast(msg: "Only PDF files are supported.");
+      return; // End the operation gracefully
     }
 
     // Define the path in Firebase Storage specifically for PDFs
@@ -121,7 +122,9 @@ class DatabaseRepository {
         'recipientId': recipientId,
       });
     } catch (e) {
-      throw Exception("Failed to store PDF file message: $e");
+      Fluttertoast.showToast(
+          msg: "Failed to store PDF file message: $e",
+          gravity: ToastGravity.CENTER);
     }
   }
 

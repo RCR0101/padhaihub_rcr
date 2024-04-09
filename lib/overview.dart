@@ -250,9 +250,17 @@ class _OverviewSectionState extends State<OverviewSection>
           return _buildOverviewContent(
               state.unreadCount, sidePadding, upPadding);
         } else if (state is OverviewError) {
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: sidePadding),
-            child: Text("Error: ${state.message}"),
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: sidePadding),
+                child: Text(
+                    "Error: ${state.message}. Please Refresh to Try Again"),
+              ),
+              SizedBox(
+                height: upPadding,
+              ),
+            ],
           );
         } else {
           return SizedBox.shrink();
@@ -268,7 +276,7 @@ class _OverviewSectionState extends State<OverviewSection>
           return _buildNotesContent(
               state.newNotesCount, sidePadding, upPadding);
         } else {
-          return Center(child: CircularProgressIndicator());
+          return _buildNotesContent(0, sidePadding, upPadding);
         }
       },
     );

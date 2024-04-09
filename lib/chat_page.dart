@@ -1,6 +1,4 @@
 // ignore_for_file: prefer_const_constructors
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -49,7 +47,6 @@ class _ChatPageState extends State<ChatPage> {
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
-
     if (result != null) {
       File file = File(result.files.single.path!);
       String fileName = path.basename(file.path);
@@ -182,9 +179,12 @@ class _ChatPageState extends State<ChatPage> {
 
   void _handleMessageLongPress(BuildContext _, types.Message message) async {
     if (message.author.id != _user.id) {
-      // Current user is not the author of the message
       Fluttertoast.showToast(
           msg: "You can't edit or delete someone else's message.");
+      return;
+    }
+    if (message is types.TextMessage) {
+      Fluttertoast.showToast(msg: "You can't edit or delete text messages.");
       return;
     }
     var screenSize = MediaQuery.of(context).size;

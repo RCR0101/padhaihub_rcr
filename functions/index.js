@@ -1,6 +1,11 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-admin.initializeApp();
+var serviceAccount = require("../padhaihub-firebase-adminsdk-btb0m-2dcdbf90da.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://padhaihub-default-rtdb.asia-southeast1.firebasedatabase.app"
+});
 
 exports.sendPushNotification = functions.firestore
     .document('chats/{chatId}/messages/{messageId}')
@@ -26,9 +31,8 @@ exports.sendPushNotification = functions.firestore
 
         const payload = {
             notification: {
-                title: `New message!`, // Customize this title
+                title: `New message from ${message.authorName}!`, // Customize this title
                 body: message.text, // And customize this message body
-                // You can add more notification options as needed
             },
             data: {
                 // This is where you can add any data you want to send along with the notification
