@@ -72,7 +72,7 @@ class MyHomePage extends StatelessWidget {
                                   0.1), // Responsive font size
                         )),
                     SizedBox(
-                        height: screenSize.height * 0.1), // Responsive height
+                        height: screenSize.height * 0.035), // Responsive height
                     Text(
                         'Welcome to PadhaiHub, a platform which gives you the freedom to share notes with anybody in BITS Pilani Hyderabad Campus!',
                         textAlign: TextAlign.center,

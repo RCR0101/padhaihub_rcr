@@ -34,7 +34,8 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
         'uploadedAt':
             FieldValue.serverTimestamp(), // Firestore server timestamp
         'id': fileName,
-        'uploader': FirebaseAuth.instance.currentUser?.uid
+        'uploader': FirebaseAuth.instance.currentUser?.uid,
+        'uploaderName': FirebaseAuth.instance.currentUser?.displayName
       });
 
       // Trigger fetching all PDFs including the newly uploaded one

@@ -2,12 +2,14 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:padhaihub_v2/bloc/notes_bloc/notes_state.dart';
 import 'package:padhaihub_v2/pdf_view.dart';
 import 'package:path_provider/path_provider.dart';
@@ -182,9 +184,89 @@ class _MyNotesPageState extends State<MyNotesPage> {
       children: <Widget>[
         Padding(
           padding: EdgeInsets.only(left: 5, right: 5),
-          child: CircleAvatar(
-            backgroundImage: NetworkImage(imageUrl),
-            radius: 20,
+          child: GestureDetector(
+            onTap: () async {
+              final details = await fetchPdfUploaderDetails(fileMessage.id);
+              final uploaderName = details['uploaderName'];
+              final uploadedAt = details['uploadedAt'] as Timestamp;
+              final formattedTime =
+                  DateFormat('dd-MM-yyyy – kk:mm').format(uploadedAt.toDate());
+              showCupertinoModalPopup(
+                context: context,
+                builder: (BuildContext context) {
+                  final Size screenSize = MediaQuery.of(context).size;
+                  return Material(
+                    // Wrap in Material to fix the yellow underline issue
+                    type:
+                        MaterialType.transparency, // Avoid any background color
+                    child: Container(
+                      height: screenSize.height / 5,
+                      margin: EdgeInsets.only(top: screenSize.height * 1 / 3),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Padding(
+                              // Adjust padding to align dash correctly
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Center(
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: 15),
+                                  height: 5,
+                                  width: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[500],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'Uploader Name: $uploaderName',
+                                style: GoogleFonts.nunito(
+                                  // Using Google Fonts for styling
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'Uploaded At: $formattedTime',
+                                style: GoogleFonts.nunitoSans(
+                                  // Subtle differentiation with Nunito Sans
+                                  color: Colors.white70,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenSize.height / 30)
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(imageUrl),
+              radius: 20,
+            ),
           ),
         ),
         Expanded(
@@ -236,5 +318,20 @@ class _MyNotesPageState extends State<MyNotesPage> {
 
   Future<void> _refreshContent(BuildContext context) async {
     context.read<BroadcastBLoC>().add(FetchPdfsEvent());
+  }
+
+  Future<Map<String, dynamic>> fetchPdfUploaderDetails(String pdfName) async {
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('pdfDocuments')
+        .doc(pdfName)
+        .get();
+
+    if (docSnapshot.exists) {
+      return {
+        'uploaderName': docSnapshot.data()?['uploaderName'] ?? 'Unknown',
+        'uploadedAt': docSnapshot.data()?['uploadedAt'] as Timestamp,
+      };
+    }
+    return {'uploaderName': 'Unknown', 'uploadedAt': Timestamp.now()};
   }
 }
