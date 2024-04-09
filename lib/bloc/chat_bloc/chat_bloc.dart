@@ -136,6 +136,7 @@ class DatabaseRepository {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) {
+              // ignore: unnecessary_cast
               final data = doc.data() as Map<String, dynamic>;
               final author = types.User(id: data['authorId']);
 

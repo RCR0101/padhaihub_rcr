@@ -34,6 +34,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   late types.User _user;
   late ChatBloc _chatBloc;
+  Map<String, double> _uploadProgress = {};
   @override
   void initState() {
     super.initState();
@@ -50,35 +51,55 @@ class _ChatPageState extends State<ChatPage> {
     if (result != null) {
       File file = File(result.files.single.path!);
       String fileName = path.basename(file.path);
+      String tempId = uuid.v4(); // Temporary ID for tracking upload
 
-      try {
-        // Upload to Firebase Storage
-        String destination = 'chat_attachments/${widget.chatId}/$fileName';
-        await FirebaseStorage.instance.ref(destination).putFile(file);
-        String fileUrl =
-            await FirebaseStorage.instance.ref(destination).getDownloadURL();
-        final message = types.FileMessage(
-          author: _user,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-          id: uuid.v4(),
-          name: result.files.single.name,
-          size: result.files.single.size,
-          uri: fileUrl,
-        );
-        _chatBloc.add(
-            SendFileMessageEvent(message, widget.chatId, file, widget.userId));
-        List<String> userIds = widget.chatId.split('_');
-        String recipientId =
-            userIds.firstWhere((id) => id == widget.userId, orElse: () => '');
+      setState(() {
+        _uploadProgress[tempId] = 0; // Initialize progress tracking
+      });
 
-        if (recipientId.isNotEmpty) {
-          context
-              .read<ChatBloc>()
-              .add(IncrementUnreadMessages(widget.chatId, recipientId));
-        }
-      } catch (e) {
-        Fluttertoast.showToast(msg: "$e", gravity: ToastGravity.CENTER);
-      }
+      String destination = 'chat_attachments/${widget.chatId}/$fileName';
+      UploadTask uploadTask =
+          FirebaseStorage.instance.ref(destination).putFile(file);
+
+      // Listen for upload progress
+      uploadTask.snapshotEvents.listen(
+        (TaskSnapshot snapshot) {
+          double progress = snapshot.bytesTransferred / snapshot.totalBytes;
+          // Update progress
+          setState(() {
+            _uploadProgress[tempId] = progress;
+          });
+        },
+        onError: (e) {
+          // Handle errors
+          setState(() {
+            _uploadProgress.remove(tempId); // Remove from tracking on error
+          });
+          Fluttertoast.showToast(
+              msg: "Upload failed: $e", gravity: ToastGravity.CENTER);
+        },
+        onDone: () async {
+          // Upload completed
+          String fileUrl = await uploadTask.snapshot.ref.getDownloadURL();
+          final message = types.FileMessage(
+            author: _user,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+            id: uuid.v4(),
+            name: fileName,
+            size: result.files.single.size,
+            uri: fileUrl,
+          );
+
+          // Send message
+          _chatBloc.add(SendFileMessageEvent(
+              message, widget.chatId, file, widget.userId));
+
+          // Clean up progress tracking
+          setState(() {
+            _uploadProgress.remove(tempId);
+          });
+        },
+      );
     } else {
       Fluttertoast.showToast(msg: "No File Selected");
     }
@@ -87,7 +108,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
-    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         context.read<ChatBloc>().add(ResetUnreadMessages(
@@ -106,41 +126,47 @@ class _ChatPageState extends State<ChatPage> {
                         letterSpacing: screenSize.width * 0.03))),
             backgroundColor: Colors.teal.shade300,
           ),
-          body: BlocConsumer<ChatBloc, ChatStateBloc>(
-            listener: (context, state) {
-              if (state is ChatErrorState) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.error)),
-                );
-              }
-            },
-            builder: (context, state) {
-              if (state is ChatLoadingState) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (state is ChatMessagesUpdatedState) {
-                return Chat(
-                  theme: DarkChatTheme(
-                      inputBackgroundColor: Colors.teal.shade300,
-                      backgroundColor: Colors.teal.shade300,
-                      receivedMessageDocumentIconColor: Colors.white,
-                      sentMessageDocumentIconColor: Colors.white,
-                      attachmentButtonIcon: const Icon(
-                          Icons.attach_file_rounded,
-                          color: Colors.black),
-                      inputTextColor: Colors.black),
-                  messages: state.messages,
-                  scrollPhysics: BouncingScrollPhysics(
-                      decelerationRate: ScrollDecelerationRate.normal),
-                  onSendPressed: _handleSendPressed,
-                  onMessageTap: _handleMessageTap,
-                  onMessageLongPress: _handleMessageLongPress,
-                  user: _user,
-                  onAttachmentPressed: _handleAttachPressed,
-                );
-              }
-              return const Center(
-                  child: Text("No messages or an error occurred"));
-            },
+          body: Column(
+            children: [
+              Expanded(
+                child: BlocConsumer<ChatBloc, ChatStateBloc>(
+                  listener: (context, state) {
+                    if (state is ChatErrorState) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(state.error)),
+                      );
+                    }
+                  },
+                  builder: (context, state) {
+                    if (state is ChatLoadingState) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (state is ChatMessagesUpdatedState) {
+                      return Chat(
+                        theme: DarkChatTheme(
+                            inputBackgroundColor: Colors.teal.shade300,
+                            backgroundColor: Colors.teal.shade300,
+                            receivedMessageDocumentIconColor: Colors.white,
+                            sentMessageDocumentIconColor: Colors.white,
+                            attachmentButtonIcon: Icon(
+                                Icons.attach_file_rounded,
+                                color: Colors.black),
+                            inputTextColor: Colors.black),
+                        messages: state.messages,
+                        onSendPressed: _handleSendPressed,
+                        onMessageTap: _handleMessageTap,
+                        onMessageLongPress: _handleMessageLongPress,
+                        user: _user,
+                        onAttachmentPressed: _handleAttachPressed,
+                      );
+                    }
+                    return Center(
+                        child: Text("No messages or an error occurred"));
+                  },
+                ),
+              ),
+              // Insert the upload indicator here
+              if (_uploadProgress.isNotEmpty) _buildUploadIndicator(),
+            ],
           )),
     );
   }
@@ -297,5 +323,22 @@ class _ChatPageState extends State<ChatPage> {
     // ignore: unused_local_variable
     final response = await Dio().download(url, filePath);
     return filePath;
+  }
+
+  Widget _buildUploadIndicator() {
+    const double progressIndicatorHeight = 8.0;
+
+    List<Widget> progressIndicators = _uploadProgress.entries.map((entry) {
+      return SizedBox(
+        height: progressIndicatorHeight, // Apply the height to the SizedBox
+        child: LinearProgressIndicator(
+          value: entry.value,
+          backgroundColor: Colors.grey[300],
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+        ),
+      );
+    }).toList();
+
+    return Column(children: progressIndicators);
   }
 }

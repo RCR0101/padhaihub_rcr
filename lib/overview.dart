@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:padhaihub_v2/bloc/notes_bloc/notes_bloc.dart';
 import 'package:padhaihub_v2/chat_list.dart';
+import 'package:padhaihub_v2/faq_page.dart';
 import 'package:padhaihub_v2/notes.dart';
 import 'package:padhaihub_v2/profile_page.dart';
 import 'bloc/notes_bloc/notes_event.dart';
@@ -214,6 +215,7 @@ class _OverviewSectionState extends State<OverviewSection>
                       SizedBox(height: upPadding * 0.5),
                       _buildOverviewMessages(sidePadding, upPadding),
                       _buildOverviewNotes(sidePadding, upPadding),
+                      _buildFaqContent(context, sidePadding, upPadding),
                     ],
                   ),
                 ),
@@ -387,6 +389,41 @@ class _OverviewSectionState extends State<OverviewSection>
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFaqContent(
+      BuildContext context, double sidePadding, double upPadding) {
+    return FadeTransition(
+      opacity: _animation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Card(
+          elevation: 4,
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            leading:
+                Icon(Icons.question_answer, size: 32, color: Colors.orange),
+            title: Text(
+              "FAQs",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: MediaQuery.of(context).size.width > 360 ? 18 : 16,
+              ),
+            ),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) => FaqPage(),
+              );
+            },
           ),
         ),
       ),

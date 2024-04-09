@@ -40,7 +40,7 @@ class MyHomePage extends StatelessWidget {
             ],
           ),
         );
-        return exit ?? false;
+        return exit;
       },
       child: Scaffold(
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

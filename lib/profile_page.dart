@@ -164,6 +164,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                           builder: (context, state) {
                             if (state is ProfileLoaded) {
                               return TextFormField(
+                                readOnly: true,
                                 initialValue: state.firstName,
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
@@ -197,6 +198,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                           builder: (context, state) {
                             if (state is ProfileLoaded) {
                               return TextFormField(
+                                readOnly: true,
                                 initialValue: state.lastName,
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
