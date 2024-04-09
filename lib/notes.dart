@@ -39,9 +39,14 @@ class _MyNotesPageState extends State<MyNotesPage> {
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        context.read<BroadcastBLoC>().add(UserVisitedNotesPage());
+        await Future.delayed(Duration(milliseconds: 1));
+        Navigator.of(context).pop(true);
+        return false;
+      },
+      child: Scaffold(
         backgroundColor: Colors.teal.shade300,
         appBar: AppBar(
           centerTitle: true,

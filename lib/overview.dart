@@ -151,7 +151,7 @@ class OverviewSection extends StatefulWidget {
 }
 
 class _OverviewSectionState extends State<OverviewSection>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _controller;
   late Animation<double> _animation;
   late Animation<Offset> _slideAnimation;
@@ -160,6 +160,8 @@ class _OverviewSectionState extends State<OverviewSection>
   void initState() {
     super.initState();
     NotificationPermissionHandler.requestNotificationPermissionIfNeeded();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshContent(context);
     _handleTokenRefresh();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
@@ -186,8 +188,18 @@ class _OverviewSectionState extends State<OverviewSection>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _refreshContent(
+          context); // Assuming this method is within OverviewSection
+    }
   }
 
   @override

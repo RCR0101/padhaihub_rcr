@@ -114,22 +114,25 @@ class BroadcastBLoC extends Bloc<BroadcastEvent, BroadcastState> {
 
   Future<void> _handleCalculateUnreadNotes(
       CalculateUnreadNotesEvent event, Emitter<BroadcastState> emit) async {
-    final userDoc = await FirebaseFirestore.instance
+    final userRef = FirebaseFirestore.instance
         .collection('users')
-        .doc(FirebaseAuth.instance.currentUser?.uid)
-        .get();
-    final lastVisited = userDoc.data()?['lastVisitedNotes'] as Timestamp?;
+        .doc(FirebaseAuth.instance.currentUser?.uid);
 
-    int newNotesCount = 0;
-    if (lastVisited != null) {
-      final notesQuery = FirebaseFirestore.instance
-          .collection('pdfDocuments')
-          .where('uploadedAt', isGreaterThan: lastVisited.toDate());
-      final newNotesSnapshot = await notesQuery.get();
-      newNotesCount = newNotesSnapshot.docs.length;
+    final userDoc = await userRef.get();
+    final Timestamp? lastVisited = userDoc.data()?['lastVisitedNotes'];
+
+    if (lastVisited == null) {
+      emit(NewNotesCountUpdated(0));
+      return;
     }
+    final notesQuery = FirebaseFirestore.instance
+        .collection('pdfDocuments')
+        .where('uploadedAt', isGreaterThan: lastVisited.toDate());
 
-    // Emitting the new state with the count
+    final newNotesSnapshot = await notesQuery.get();
+
+    int newNotesCount = newNotesSnapshot.docs.length;
+
     emit(NewNotesCountUpdated(newNotesCount));
   }
 }

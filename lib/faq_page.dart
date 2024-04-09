@@ -9,7 +9,7 @@ class FaqPage extends StatelessWidget {
     return WillPopScope(
       onWillPop: () {
         Navigator.pop(context); // Pop the current route
-        return Future.value(false);
+        return Future.value(true);
       },
       child: Scaffold(
         appBar: AppBar(
