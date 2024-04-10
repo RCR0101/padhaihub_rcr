@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:padhaihub_v2/overview.dart';
 
 class FaqPage extends StatefulWidget {
   const FaqPage({Key? key}) : super(key: key);
@@ -32,16 +33,23 @@ class _FaqPageState extends State<FaqPage> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
+    // ignore: deprecated_member_use
     return WillPopScope(
-      onWillPop: () {
-        return Future.value(true);
+      onWillPop: () async {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => MyLandingPage(title: 'PadhaiHub')),
+        );
+        return false; // Prevent default back button behavior
       },
       child: Scaffold(
         backgroundColor: Colors.teal.shade300,
         appBar: AppBar(
           centerTitle: true,
           title: Padding(
-            padding: const EdgeInsets.only(top: 8.0), // Shifts the title down
+            padding:
+                const EdgeInsets.only(bottom: 8.0), // Shifts the title down
             child: Text(
               'FAQs',
               style: GoogleFonts.abel(

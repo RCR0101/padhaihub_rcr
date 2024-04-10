@@ -55,6 +55,10 @@ class App extends StatelessWidget {
           useMaterial3: true,
         ),
         home: AuthenticationWrapper(),
+        routes: {
+          '/home': (context) => MyHomePage(title: 'PadhaiHub'),
+          '/landingPage': (context) => MyLandingPage(title: 'PadhaiHub'),
+        },
       ),
     );
   }

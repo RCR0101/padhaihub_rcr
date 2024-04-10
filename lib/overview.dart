@@ -430,10 +430,10 @@ class _OverviewSectionState extends State<OverviewSection>
               ),
             ),
             onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (context) => FaqPage(),
+              // Use Navigator.push to navigate to the FaqPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FaqPage()),
               );
             },
           ),
